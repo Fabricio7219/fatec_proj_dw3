@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Docente - FatecWeek 2025</title>
+    <link rel="stylesheet" href="style-docente.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
+            <a href="index.html" class="btn-voltar">← Voltar</a>
+        </div>
+    </header>
+
+    <main class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>👨‍🏫 Login Docente</h1>
+                <p>Acesse com sua conta institucional Microsoft 365</p>
+            </div>
+
+            <div class="login-content">
+                <div id="loginStatus" class="status-message"></div>
+                
+                <button id="loginButton" class="btn-microsoft" onclick="signIn()">
+                    <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="10" height="10" fill="#F25022"/>
+                        <rect x="11" width="10" height="10" fill="#7FBA00"/>
+                        <rect y="11" width="10" height="10" fill="#00A4EF"/>
+                        <rect x="11" y="11" width="10" height="10" fill="#FFB900"/>
+                    </svg>
+                    Entrar com Microsoft 365
+                </button>
+
+                <div id="userInfo" class="user-info" style="display: none;">
+                    <div class="user-card">
+                        <div class="user-avatar" id="userAvatar">👤</div>
+                        <div class="user-details">
+                            <h3 id="userName"></h3>
+                            <p id="userEmail"></p>
+                        </div>
+                    </div>
+                    <button class="btn-continue" onclick="continuarParaDashboard()">
+                        Continuar para o Sistema
+                    </button>
+                    <button class="btn-logout" onclick="signOut()">
+                        Sair
+                    </button>
+                </div>
+            </div>
+
+            <div class="login-info">
+                <h3>ℹ️ Informações Importantes</h3>
+                <ul>
+                    <li>Use seu e-mail institucional (@fatec.sp.gov.br)</li>
+                    <li>A autenticação é feita através da Microsoft</li>
+                    <li>Seus dados estão protegidos e seguros</li>
+                    <li>Em caso de problemas, contate o suporte</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 FatecWeek - Fatec. Todos os direitos reservados.</p>
+    </footer>
+
+    <!-- MSAL.js -->
+    <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
+    
+    <script>
+        // Configuração do MSAL
+        // IMPORTANTE: Você precisa registrar seu aplicativo no Azure AD primeiro
+        // Acesse: https://portal.azure.com -> Azure Active Directory -> App registrations
+        const msalConfig = {
+            auth: {
+                clientId: "SEU_CLIENT_ID_AQUI", // Substitua pelo seu Client ID do Azure
+                authority: "https://login.microsoftonline.com/common", // ou use o tenant ID específico
+                redirectUri: window.location.origin + "/login-docente.html"
+            },
+            cache: {
+                cacheLocation: "localStorage",
+                storeAuthStateInCookie: false
+            }
+        };
+
+        const loginRequest = {
+            scopes: ["User.Read", "email", "profile"]
+        };
+
+        // Inicializar MSAL
+        const myMSALObj = new msal.PublicClientApplication(msalConfig);
+
+        // Verificar se já está logado ao carregar a página
+        myMSALObj.handleRedirectPromise()
+            .then(response => {
+                if (response) {
+                    handleResponse(response);
+                } else {
+                    const accounts = myMSALObj.getAllAccounts();
+                    if (accounts.length > 0) {
+                        // Usuário já está autenticado
+                        getUserInfo();
+                    }
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showStatus("Erro na autenticação: " + err.message, "error");
+            });
+
+        // Função de login
+        async function signIn() {
+            try {
+                showStatus("Redirecionando para Microsoft...", "info");
+                const loginResponse = await myMSALObj.loginPopup(loginRequest);
+                handleResponse(loginResponse);
+            } catch (error) {
+                console.error(error);
+                showStatus("Erro ao fazer login: " + error.message, "error");
+            }
+        }
+
+        // Processar resposta do login
+        function handleResponse(response) {
+            if (response !== null) {
+                myMSALObj.setActiveAccount(response.account);
+                getUserInfo();
+            }
+        }
+
+        // Obter informações do usuário
+        async function getUserInfo() {
+            const account = myMSALObj.getActiveAccount();
+            
+            if (!account) {
+                showStatus("Nenhuma conta ativa encontrada", "error");
+                return;
+            }
+
+            // Verificar se é e-mail institucional
+            const email = account.username;
+            if (!email.endsWith('@fatec.sp.gov.br')) {
+                showStatus("⚠️ Por favor, use seu e-mail institucional (@fatec.sp.gov.br)", "error");
+                await signOut();
+                return;
+            }
+
+            try {
+                const response = await myMSALObj.acquireTokenSilent({
+                    ...loginRequest,
+                    account: account
+                });
+
+                // Chamar Microsoft Graph API para obter dados do usuário
+                const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+                    headers: {
+                        'Authorization': 'Bearer ' + response.accessToken
+                    }
+                });
+
+                const userData = await graphResponse.json();
+                displayUserInfo(userData);
+                
+            } catch (error) {
+                console.error(error);
+                showStatus("Erro ao obter informações do usuário", "error");
+            }
+        }
+
+        // Exibir informações do usuário
+        function displayUserInfo(userData) {
+            document.getElementById('loginButton').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('userName').textContent = userData.displayName || 'Docente';
+            document.getElementById('userEmail').textContent = userData.mail || userData.userPrincipalName;
+            
+            // Salvar dados no localStorage para usar em outras páginas
+            const docenteData = {
+                nome: userData.displayName,
+                email: userData.mail || userData.userPrincipalName,
+                id: userData.id,
+                tipo: 'docente'
+            };
+            localStorage.setItem('usuarioLogado', JSON.stringify(docenteData));
+            
+            showStatus("✅ Login realizado com sucesso!", "success");
+        }
+
+        // Função de logout
+        async function signOut() {
+            try {
+                localStorage.removeItem('usuarioLogado');
+                await myMSALObj.logoutPopup();
+                document.getElementById('loginButton').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'none';
+                showStatus("Você saiu da conta", "info");
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Continuar para o dashboard
+        function continuarParaDashboard() {
+            const usuario = JSON.parse(localStorage.getItem('usuarioLogado'));
+            if (usuario && usuario.tipo === 'docente') {
+                window.location.href = 'dashboard-docente.html';
+            } else {
+                showStatus("Erro ao validar usuário", "error");
+            }
+        }
+
+        // Exibir mensagens de status
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('loginStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.style.display = 'block';
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

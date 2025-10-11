@@ -30,12 +30,122 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 20px;
+    gap: 20px;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 40px 20px;
+}
+
+/* Carrossel */
+.carousel-container {
+    margin-bottom: 40px;
+}
+
+.carousel {
+    position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-slide {
+    min-width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-slide.active {
+    display: flex;
+}
+
+.carousel-slide img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    display: block;
+}
+
+.carousel-caption {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+}
+
+.carousel-caption h3 {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.carousel-caption p {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background 0.3s ease;
+}
+
+.carousel-btn:hover {
+    background: rgba(0,0,0,0.8);
+}
+
+.carousel-btn.prev {
+    left: 20px;
+}
+
+.carousel-btn.next {
+    right: 20px;
+}
+
+.carousel-dots {
+    text-align: center;
+    padding: 20px 0;
+    background: white;
+}
+
+.dot {
+    height: 15px;
+    width: 15px;
+    margin: 0 5px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.dot.active,
+.dot:hover {
+    background-color: #c41e3a;
 }
 
 .card {
@@ -111,53 +221,19 @@ body {
     font-size: 16px;
 }
 
-/* Formulário */
-.formulario h2 {
+.btn-secondary {
+    background: white;
     color: #c41e3a;
-    font-size: 28px;
-    margin-bottom: 25px;
-    text-align: center;
-}
-
-.form-inscricao {
-    display: grid;
-    gap: 20px;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.form-group label {
+    border: 2px solid #c41e3a;
+    padding: 10px 20px;
+    font-size: 14px;
     font-weight: bold;
-    color: #333;
-    font-size: 16px;
 }
 
-.form-group input,
-.form-group select {
-    padding: 12px 15px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: border-color 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    outline: none;
-    border-color: #c41e3a;
-    box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
-}
-
-.btn-submit {
-    margin-top: 10px;
-    justify-self: center;
-    max-width: 250px;
+.btn-secondary:hover {
+    background: #c41e3a;
+    color: white;
+    transform: translateY(-2px);
 }
 
 .footer {
@@ -185,6 +261,19 @@ body {
         text-align: center;
     }
     
+    .header-buttons {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .btn-secondary,
+    .btn-header {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
     .container {
         padding: 20px 15px;
     }
@@ -202,12 +291,25 @@ body {
         max-height: 60px;
     }
     
-    .btn-header {
-        padding: 10px 20px;
+    .carousel-slide img {
+        height: 250px;
+    }
+    
+    .carousel-caption {
+        bottom: 15px;
+        left: 15px;
+    }
+    
+    .carousel-caption h3 {
+        font-size: 20px;
+    }
+    
+    .carousel-caption p {
         font-size: 14px;
     }
     
-    .form-inscricao {
-        max-width: 100%;
+    .carousel-btn {
+        padding: 10px 15px;
+        font-size: 16px;
     }
 }
