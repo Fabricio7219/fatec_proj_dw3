@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Docente - FatecWeek 2025</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
+            <div class="user-header">
+                <span class="user-name">👨‍🏫 Prof. Nome do Docente</span>
+                <a href="index.html" class="btn-sair">Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>Painel de Controle - Docente</h1>
+            <p>Gerencie as presenças das palestras</p>
+        </div>
+
+        <!-- Seletor de Palestras -->
+        <div class="palestras-selector card">
+            <h2>📚 Selecione a Palestra</h2>
+            <div class="palestras-grid">
+                <button class="palestra-btn active" onclick="selecionarPalestra(1)">
+                    <span class="palestra-icon">🤖</span>
+                    <span class="palestra-titulo">Palestra 1</span>
+                    <span class="palestra-tema">Inteligência Artificial</span>
+                    <span class="palestra-info">16/10 - 19h às 21h</span>
+                </button>
+                
+                <button class="palestra-btn" onclick="selecionarPalestra(2)">
+                    <span class="palestra-icon">🌐</span>
+                    <span class="palestra-titulo">Palestra 2</span>
+                    <span class="palestra-tema">Desenvolvimento Web</span>
+                    <span class="palestra-info">16/10 - 21h às 22h40</span>
+                </button>
+                
+                <button class="palestra-btn" onclick="selecionarPalestra(3)">
+                    <span class="palestra-icon">📱</span>
+                    <span class="palestra-titulo">Palestra 3</span>
+                    <span class="palestra-tema">Mobile Development</span>
+                    <span class="palestra-info">17/10 - 19h às 21h</span>
+                </button>
+                
+                <button class="palestra-btn" onclick="selecionarPalestra(4)">
+                    <span class="palestra-icon">📊</span>
+                    <span class="palestra-titulo">Palestra 4</span>
+                    <span class="palestra-tema">Ciência de Dados</span>
+                    <span class="palestra-info">17/10 - 21h às 22h40</span>
+                </button>
+                
+                <button class="palestra-btn" onclick="selecionarPalestra(5)">
+                    <span class="palestra-icon">☁️</span>
+                    <span class="palestra-titulo">Palestra 5</span>
+                    <span class="palestra-tema">Cloud Computing</span>
+                    <span class="palestra-info">18/10 - 10h às 12h</span>
+                </button>
+                
+                <button class="palestra-btn" onclick="selecionarPalestra(6)">
+                    <span class="palestra-icon">🔒</span>
+                    <span class="palestra-titulo">Palestra 6</span>
+                    <span class="palestra-tema">Segurança da Informação</span>
+                    <span class="palestra-info">18/10 - 14h às 17h</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="stats-grid">
+            <div class="stat-card card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <h3 id="totalPresentes">0</h3>
+                    <p>Presentes</p>
+                </div>
+            </div>
+            
+            <div class="stat-card card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <h3 id="totalEntradas">0</h3>
+                    <p>Entradas Registradas</p>
+                </div>
+            </div>
+            
+            <div class="stat-card card">
+                <div class="stat-icon">🚪</div>
+                <div class="stat-info">
+                    <h3 id="totalSaidas">0</h3>
+                    <p>Saídas Registradas</p>
+                </div>
+            </div>
+            
+            <div class="stat-card card">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-info">
+                    <h3 id="tempoMedio">0h</h3>
+                    <p>Tempo Médio</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Presenças -->
+        <div class="presencas-container card">
+            <div class="presencas-header">
+                <h2>📋 Lista de Presença - <span id="palestraNome">Palestra 1</span></h2>
+                <div class="acoes-header">
+                    <button class="btn-exportar" onclick="exportarCSV()">📥 Exportar CSV</button>
+                    <button class="btn-atualizar" onclick="atualizarDados()">🔄 Atualizar</button>
+                </div>
+            </div>
+
+            <div class="filtros">
+                <input type="text" id="filtroNome" placeholder="🔍 Buscar por nome ou RA..." onkeyup="filtrarPresencas()">
+                <select id="filtroStatus" onchange="filtrarPresencas()">
+                    <option value="">Todos os status</option>
+                    <option value="presente">✅ Presentes</option>
+                    <option value="saiu">🚪 Já saíram</option>
+                </select>
+            </div>
+
+            <div class="tabela-wrapper">
+                <table class="tabela-presencas">
+                    <thead>
+                        <tr>
+                            <th>RA</th>
+                            <th>Nome</th>
+                            <th>Data</th>
+                            <th>Hora Entrada</th>
+                            <th>Hora Saída</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaPresencas">
+                        <!-- Dados serão inseridos aqui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tabela-footer">
+                <p>Total de registros: <strong id="totalRegistros">0</strong></p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Dados simulados de presença
+        const dadosPresencas = {
+            1: [
+                { ra: '123456', nome: 'João Silva Santos', data: '16/10/2025', entrada: '19:05', saida: '20:58', status: 'saiu' },
+                { ra: '234567', nome: 'Maria Oliveira Costa', data: '16/10/2025', entrada: '19:10', saida: '', status: 'presente' },
+                { ra: '345678', nome: 'Pedro Henrique Souza', data: '16/10/2025', entrada: '19:03', saida: '20:45', status: 'saiu' },
+                { ra: '456789', nome: 'Ana Paula Rodrigues', data: '16/10/2025', entrada: '19:15', saida: '', status: 'presente' },
+                { ra: '567890', nome: 'Carlos Eduardo Lima', data: '16/10/2025', entrada: '19:08', saida: '21:00', status: 'saiu' },
+                { ra: '678901', nome: 'Fernanda Alves Pereira', data: '16/10/2025', entrada: '19:20', saida: '', status: 'presente' },
+                { ra: '789012', nome: 'Lucas Martins Silva', data: '16/10/2025', entrada: '19:12', saida: '20:50', status: 'saiu' },
+                { ra: '890123', nome: 'Juliana Santos Costa', data: '16/10/2025', entrada: '19:07', saida: '', status: 'presente' }
+            ],
+            2: [
+                { ra: '123456', nome: 'João Silva Santos', data: '16/10/2025', entrada: '21:05', saida: '', status: 'presente' },
+                { ra: '234567', nome: 'Maria Oliveira Costa', data: '16/10/2025', entrada: '21:10', saida: '22:35', status: 'saiu' },
+                { ra: '901234', nome: 'Roberto Carlos Mendes', data: '16/10/2025', entrada: '21:08', saida: '', status: 'presente' }
+            ],
+            3: [
+                { ra: '345678', nome: 'Pedro Henrique Souza', data: '17/10/2025', entrada: '19:02', saida: '', status: 'presente' },
+                { ra: '456789', nome: 'Ana Paula Rodrigues', data: '17/10/2025', entrada: '19:15', saida: '20:55', status: 'saiu' }
+            ],
+            4: [
+                { ra: '567890', nome: 'Carlos Eduardo Lima', data: '17/10/2025', entrada: '21:03', saida: '', status: 'presente' }
+            ],
+            5: [
+                { ra: '678901', nome: 'Fernanda Alves Pereira', data: '18/10/2025', entrada: '10:05', saida: '11:58', status: 'saiu' }
+            ],
+            6: [
+                { ra: '789012', nome: 'Lucas Martins Silva', data: '18/10/2025', entrada: '14:10', saida: '', status: 'presente' }
+            ]
+        };
+
+        let palestraSelecionada = 1;
+        let todosOsDados = [];
+
+        // Carregar dados iniciais
+        window.onload = function() {
+            carregarPresencas(palestraSelecionada);
+        };
+
+        // Selecionar palestra
+        function selecionarPalestra(numero) {
+            palestraSelecionada = numero;
+            
+            // Atualizar visual dos botões
+            document.querySelectorAll('.palestra-btn').forEach((btn, index) => {
+                btn.classList.remove('active');
+                if (index + 1 === numero) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Atualizar nome da palestra
+            document.getElementById('palestraNome').textContent = `Palestra ${numero}`;
+            
+            // Carregar dados
+            carregarPresencas(numero);
+        }
+
+        // Carregar presenças
+        function carregarPresencas(numeroPalestra) {
+            todosOsDados = dadosPresencas[numeroPalestra] || [];
+            renderizarTabela(todosOsDados);
+            atualizarEstatisticas(todosOsDados);
+        }
+
+        // Renderizar tabela
+        function renderizarTabela(dados) {
+            const tbody = document.getElementById('tabelaPresencas');
+            tbody.innerHTML = '';
+            
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Nenhum registro encontrado</td></tr>';
+                document.getElementById('totalRegistros').textContent = '0';
+                return;
+            }
+            
+            dados.forEach(aluno => {
+                const tr = document.createElement('tr');
+                const statusClass = aluno.status === 'presente' ? 'status-presente' : 'status-saiu';
+                const statusText = aluno.status === 'presente' ? '✅ Presente' : '🚪 Saiu';
+                
+                tr.innerHTML = `
+                    <td><strong>${aluno.ra}</strong></td>
+                    <td>${aluno.nome}</td>
+                    <td>${aluno.data}</td>
+                    <td><strong>${aluno.entrada}</strong></td>
+                    <td>${aluno.saida || '-'}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('totalRegistros').textContent = dados.length;
+        }
+
+        // Atualizar estatísticas
+        function atualizarEstatisticas(dados) {
+            const presentes = dados.filter(a => a.status === 'presente').length;
+            const saidas = dados.filter(a => a.status === 'saiu').length;
+            const entradas = dados.length;
+            
+            document.getElementById('totalPresentes').textContent = presentes;
+            document.getElementById('totalEntradas').textContent = entradas;
+            document.getElementById('totalSaidas').textContent = saidas;
+            
+            // Calcular tempo médio (simplificado)
+            const temposMinutos = dados
+                .filter(a => a.saida)
+                .map(a => {
+                    const [hE, mE] = a.entrada.split(':').map(Number);
+                    const [hS, mS] = a.saida.split(':').map(Number);
+                    return (hS * 60 + mS) - (hE * 60 + mE);
+                });
+            
+            if (temposMinutos.length > 0) {
+                const media = temposMinutos.reduce((a, b) => a + b, 0) / temposMinutos.length;
+                const horas = Math.floor(media / 60);
+                const minutos = Math.round(media % 60);
+                document.getElementById('tempoMedio').textContent = `${horas}h${minutos}m`;
+            } else {
+                document.getElementById('tempoMedio').textContent = '0h';
+            }
+        }
+
+        // Filtrar presenças
+        function filtrarPresencas() {
+            const filtroNome = document.getElementById('filtroNome').value.toLowerCase();
+            const filtroStatus = document.getElementById('filtroStatus').value;
+            
+            let dadosFiltrados = todosOsDados;
+            
+            if (filtroNome) {
+                dadosFiltrados = dadosFiltrados.filter(a => 
+                    a.nome.toLowerCase().includes(filtroNome) || 
+                    a.ra.includes(filtroNome)
+                );
+            }
+            
+            if (filtroStatus) {
+                dadosFiltrados = dadosFiltrados.filter(a => a.status === filtroStatus);
+            }
+            
+            renderizarTabela(dadosFiltrados);
+        }
+
+        // Exportar CSV
+        function exportarCSV() {
+            let csv = 'RA,Nome,Data,Hora Entrada,Hora Saída,Status\n';
+            
+            todosOsDados.forEach(aluno => {
+                csv += `${aluno.ra},${aluno.nome},${aluno.data},${aluno.entrada},${aluno.saida || '-'},${aluno.status}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `presencas_palestra_${palestraSelecionada}_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Atualizar dados
+        function atualizarDados() {
+            carregarPresencas(palestraSelecionada);
+            alert('✅ Dados atualizados com sucesso!');
+        }
+    </script>
+</body>
+</html>
