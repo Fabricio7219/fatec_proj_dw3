@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Docente - FatecWeek 2025</title>
+    <link rel="stylesheet" href="style-login.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
+            <a href="index.html" class="btn-voltar">← Voltar</a>
+        </div>
+    </header>
+
+    <main class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>👨‍🏫 Login Docente</h1>
+                <p>Acesse com sua conta Google institucional</p>
+            </div>
+
+            <div class="login-content">
+                <div id="loginStatus" class="status-message"></div>
+                
+                <!-- Etapa 1: Botão Google -->
+                <div id="etapaLogin">
+                    <div id="buttonDiv"></div>
+                </div>
+
+                <!-- Etapa 2: Formulário -->
+                <div id="etapaCadastro" class="form-complemento">
+                    <div class="user-card">
+                        <h3 id="userName"></h3>
+                        <p id="userEmail"></p>
+                    </div>
+
+                    <form id="formComplemento" onsubmit="finalizarCadastro(event)">
+                        <div class="form-group">
+                            <label>Cursos que leciona *</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="cursos" value="ads"> 
+                                    <span>Análise e Desenvolvimento de Sistemas</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="cursos" value="dsm"> 
+                                    <span>Desenvolvimento de Software Multiplataforma</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="cursos" value="si"> 
+                                    <span>Sistemas para Internet</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="cursos" value="bd"> 
+                                    <span>Banco de Dados</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="cursos" value="jogos"> 
+                                    <span>Jogos Digitais</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="cursos" value="redes"> 
+                                    <span>Redes de Computadores</span>
+                                </label>
+                            </div>
+                            <small>Selecione todos os cursos que você leciona</small>
+                            <div id="errorCursos" class="error-message">
+                                ⚠️ Selecione pelo menos um curso
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fatec">FATEC onde leciona *</label>
+                            <select id="fatec" required>
+                                <option value="">Selecione sua FATEC</option>
+                                <option value="fatec-osasco">FATEC Osasco - Prefeito Hirant Sanazar</option>
+                                <option value="fatec-sp">FATEC São Paulo</option>
+                                <option value="fatec-zona-leste">FATEC Zona Leste</option>
+                                <option value="fatec-zona-sul">FATEC Zona Sul</option>
+                                <option value="fatec-ipiranga">FATEC Ipiranga</option>
+                                <option value="fatec-guarulhos">FATEC Guarulhos</option>
+                                <option value="fatec-carapicuiba">FATEC Carapicuíba</option>
+                                <option value="fatec-tatuape">FATEC Tatuapé</option>
+                                <option value="multiplas">Leciono em múltiplas FATECs</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-continue">Finalizar e Acessar Sistema</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <script>
+        // SUBSTITUA PELO SEU CLIENT ID DO GOOGLE
+        const GOOGLE_CLIENT_ID = "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com";
+        
+        let dadosUsuario = null;
+
+        window.onload = function() {
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse
+            });
+
+            google.accounts.id.renderButton(
+                document.getElementById("buttonDiv"),
+                { 
+                    theme: "outline", 
+                    size: "large",
+                    width: 350,
+                    text: "signin_with",
+                    locale: "pt-BR"
+                }
+            );
+        };
+
+        function handleCredentialResponse(response) {
+            const userObject = parseJwt(response.credential);
+            
+            // Validar email institucional
+            if (!userObject.email.endsWith('@fatec.sp.gov.br')) {
+                mostrarMensagem('⚠️ Use seu e-mail institucional (@fatec.sp.gov.br)', 'error');
+                return;
+            }
+
+            dadosUsuario = userObject;
+            mostrarFormulario();
+        }
+
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function mostrarFormulario() {
+            document.getElementById('etapaLogin').style.display = 'none';
+            document.getElementById('etapaCadastro').style.display = 'block';
+            
+            document.getElementById('userName').textContent = dadosUsuario.name;
+            document.getElementById('userEmail').textContent = dadosUsuario.email;
+            
+            mostrarMensagem('✅ Login realizado! Complete seu cadastro.', 'success');
+        }
+
+        function finalizarCadastro(event) {
+            event.preventDefault();
+
+            // Validar cursos selecionados
+            const cursosSelecionados = Array.from(document.querySelectorAll('input[name="cursos"]:checked'))
+                .map(cb => cb.value);
+
+            if (cursosSelecionados.length === 0) {
+                document.getElementById('errorCursos').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('errorCursos').style.display = 'none';
+
+            const docenteCompleto = {
+                nome: dadosUsuario.name,
+                email: dadosUsuario.email,
+                foto: dadosUsuario.picture || '',
+                cursos: cursosSelecionados,
+                fatec: document.getElementById('fatec').value,
+                tipo: 'docente',
+                dataRegistro: new Date().toISOString()
+            };
+
+            localStorage.setItem('usuarioLogado', JSON.stringify(docenteCompleto));
+            
+            mostrarMensagem('✅ Cadastro completo! Redirecionando...', 'success');
+            
+            setTimeout(() => {
+                window.location.href = 'dashboard-docente.html';
+            }, 1500);
+        }
+
+        function mostrarMensagem(texto, tipo) {
+            const msg = document.getElementById('loginStatus');
+            msg.textContent = texto;
+            msg.className = `status-message ${tipo}`;
+            msg.style.display = 'block';
+            
+            if (tipo === 'success') {
+                setTimeout(() => {
+                    msg.style.display = 'none';
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>
