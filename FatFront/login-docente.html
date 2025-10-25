@@ -9,7 +9,9 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
+            <a href="index.html" class="logo-link">
+                 <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
+                    </a>
             <a href="index.html" class="btn-voltar">← Voltar</a>
         </div>
     </header>
@@ -18,15 +20,23 @@
         <div class="login-card">
             <div class="login-header">
                 <h1>👨‍🏫 Login Docente</h1>
-                <p>Acesse com sua conta Google institucional</p>
+                <p>Acesse com Microsoft Entra ID (Azure AD)</p>
             </div>
 
             <div class="login-content">
                 <div id="loginStatus" class="status-message"></div>
                 
-                <!-- Etapa 1: Botão Google -->
+                <!-- Etapa 1: Botão Microsoft -->
                 <div id="etapaLogin">
-                    <div id="buttonDiv"></div>
+                    <button class="btn-microsoft" onclick="signInEntraID()">
+                        <svg width="21" height="21" viewBox="0 0 21 21">
+                            <rect width="10" height="10" fill="#F25022"/>
+                            <rect x="11" width="10" height="10" fill="#7FBA00"/>
+                            <rect y="11" width="10" height="10" fill="#00A4EF"/>
+                            <rect x="11" y="11" width="10" height="10" fill="#FFB900"/>
+                        </svg>
+                        Entrar com Microsoft
+                    </button>
                 </div>
 
                 <!-- Etapa 2: Formulário -->
@@ -42,11 +52,11 @@
                             <div class="checkbox-group">
                                 <label class="checkbox-item">
                                     <input type="checkbox" name="cursos" value="ads"> 
-                                    <span>Análise e Desenvolvimento de Sistemas</span>
+                                    <span>ADS</span>
                                 </label>
                                 <label class="checkbox-item">
                                     <input type="checkbox" name="cursos" value="dsm"> 
-                                    <span>Desenvolvimento de Software Multiplataforma</span>
+                                    <span>DSM</span>
                                 </label>
                                 <label class="checkbox-item">
                                     <input type="checkbox" name="cursos" value="si"> 
@@ -62,7 +72,7 @@
                                 </label>
                                 <label class="checkbox-item">
                                     <input type="checkbox" name="cursos" value="redes"> 
-                                    <span>Redes de Computadores</span>
+                                    <span>Redes</span>
                                 </label>
                             </div>
                             <small>Selecione todos os cursos que você leciona</small>
@@ -74,16 +84,12 @@
                         <div class="form-group">
                             <label for="fatec">FATEC onde leciona *</label>
                             <select id="fatec" required>
-                                <option value="">Selecione sua FATEC</option>
-                                <option value="fatec-osasco">FATEC Osasco - Prefeito Hirant Sanazar</option>
+                                <option value="">Selecione</option>
+                                <option value="fatec-osasco">FATEC Osasco</option>
                                 <option value="fatec-sp">FATEC São Paulo</option>
                                 <option value="fatec-zona-leste">FATEC Zona Leste</option>
                                 <option value="fatec-zona-sul">FATEC Zona Sul</option>
-                                <option value="fatec-ipiranga">FATEC Ipiranga</option>
                                 <option value="fatec-guarulhos">FATEC Guarulhos</option>
-                                <option value="fatec-carapicuiba">FATEC Carapicuíba</option>
-                                <option value="fatec-tatuape">FATEC Tatuapé</option>
-                                <option value="multiplas">Leciono em múltiplas FATECs</option>
                             </select>
                         </div>
 
@@ -94,69 +100,95 @@
         </div>
     </main>
 
-    <!-- Google Sign-In -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- MSAL.js para Entra ID -->
+    <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
     
     <script>
-        // SUBSTITUA PELO SEU CLIENT ID DO GOOGLE
-        const GOOGLE_CLIENT_ID = "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com";
-        
-        let dadosUsuario = null;
-
-        window.onload = function() {
-            google.accounts.id.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: handleCredentialResponse
-            });
-
-            google.accounts.id.renderButton(
-                document.getElementById("buttonDiv"),
-                { 
-                    theme: "outline", 
-                    size: "large",
-                    width: 350,
-                    text: "signin_with",
-                    locale: "pt-BR"
-                }
-            );
+        // SUBSTITUA pelo seu Client ID do Azure
+        const msalConfig = {
+            auth: {
+                clientId: "SEU_CLIENT_ID_AQUI",
+                authority: "https://login.microsoftonline.com/common",
+                redirectUri: window.location.origin + "/login-docente.html"
+            },
+            cache: {
+                cacheLocation: "localStorage"
+            }
         };
 
-        function handleCredentialResponse(response) {
-            const userObject = parseJwt(response.credential);
-            
-            // Validar email institucional
-            if (!userObject.email.endsWith('@fatec.sp.gov.br')) {
-                mostrarMensagem('⚠️ Use seu e-mail institucional (@fatec.sp.gov.br)', 'error');
-                return;
-            }
+        const loginRequest = {
+            scopes: ["User.Read"]
+        };
 
-            dadosUsuario = userObject;
-            mostrarFormulario();
+        const myMSALObj = new msal.PublicClientApplication(msalConfig);
+        let dadosUsuario = null;
+
+        // Login Entra ID
+        async function signInEntraID() {
+            try {
+                mostrarMensagem("Redirecionando para Microsoft...", "info");
+                const loginResponse = await myMSALObj.loginPopup(loginRequest);
+                await handleLoginSuccess(loginResponse);
+            } catch (error) {
+                console.error(error);
+                mostrarMensagem("Erro ao fazer login: " + error.message, "error");
+            }
         }
 
-        function parseJwt(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
+        // Processar login
+        async function handleLoginSuccess(response) {
+            myMSALObj.setActiveAccount(response.account);
+            
+            try {
+                const tokenResponse = await myMSALObj.acquireTokenSilent({
+                    ...loginRequest,
+                    account: response.account
+                });
+
+                const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+                    headers: { 'Authorization': 'Bearer ' + tokenResponse.accessToken }
+                });
+
+                dadosUsuario = await graphResponse.json();
+                
+                // Verificar permissão
+                if (!verificarPermissao(dadosUsuario.mail || dadosUsuario.userPrincipalName, 'docente')) {
+                    mostrarMensagem("❌ Você não tem permissão de docente. Contate o administrador.", "error");
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 3000);
+                    return;
+                }
+
+                mostrarFormulario();
+                
+            } catch (error) {
+                console.error(error);
+                mostrarMensagem("Erro ao obter dados: " + error.message, "error");
+            }
+        }
+
+        // Verificar permissão no banco de usuários
+        function verificarPermissao(email, tipoEsperado) {
+            const usuarios = JSON.parse(localStorage.getItem('usuariosAutorizados')) || [];
+            const usuario = usuarios.find(u => u.email.toLowerCase() === email.toLowerCase());
+            return usuario && usuario.tipo === tipoEsperado;
         }
 
         function mostrarFormulario() {
             document.getElementById('etapaLogin').style.display = 'none';
             document.getElementById('etapaCadastro').style.display = 'block';
             
-            document.getElementById('userName').textContent = dadosUsuario.name;
-            document.getElementById('userEmail').textContent = dadosUsuario.email;
+            document.getElementById('userName').textContent = dadosUsuario.displayName;
+            document.getElementById('userEmail').textContent = dadosUsuario.mail || dadosUsuario.userPrincipalName;
             
-            mostrarMensagem('✅ Login realizado! Complete seu cadastro.', 'success');
+            mostrarMensagem("✅ Login realizado! Complete seu cadastro.", "success");
         }
 
         function finalizarCadastro(event) {
             event.preventDefault();
 
-            // Validar cursos selecionados
+            // Validar cursos
             const cursosSelecionados = Array.from(document.querySelectorAll('input[name="cursos"]:checked'))
                 .map(cb => cb.value);
 
@@ -168,9 +200,8 @@
             document.getElementById('errorCursos').style.display = 'none';
 
             const docenteCompleto = {
-                nome: dadosUsuario.name,
-                email: dadosUsuario.email,
-                foto: dadosUsuario.picture || '',
+                nome: dadosUsuario.displayName,
+                email: dadosUsuario.mail || dadosUsuario.userPrincipalName,
                 cursos: cursosSelecionados,
                 fatec: document.getElementById('fatec').value,
                 tipo: 'docente',
@@ -179,7 +210,7 @@
 
             localStorage.setItem('usuarioLogado', JSON.stringify(docenteCompleto));
             
-            mostrarMensagem('✅ Cadastro completo! Redirecionando...', 'success');
+            mostrarMensagem("✅ Cadastro completo! Redirecionando...", "success");
             
             setTimeout(() => {
                 window.location.href = 'dashboard-docente.html';

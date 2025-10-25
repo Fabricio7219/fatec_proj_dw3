@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - FatecWeek 2025</title>
+    <link rel="stylesheet" href="style-admin.css">
+</head>
+<body>
+    <!-- Tela de Login Admin -->
+    <div id="adminLogin" class="admin-login">
+        <div class="login-box">
+            <h1>🔐 Login Administrativo</h1>
+            <form onsubmit="loginAdmin(event)">
+                <div class="form-group">
+                    <label>Usuário:</label>
+                    <input type="text" id="adminUser" required placeholder="admin">
+                </div>
+                <div class="form-group">
+                    <label>Senha:</label>
+                    <input type="password" id="adminPass" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-login">Entrar</button>
+            </form>
+            <p style="margin-top: 20px; text-align: center; font-size: 12px; color: #999;">
+                Credenciais padrão: admin / admin123
+            </p>
+        </div>
+    </div>
+
+    <!-- Dashboard Admin -->
+    <div id="adminDashboard" style="display: none;">
+        <header class="header">
+            <div class="header-content">
+                <a href="index.html" class="logo-link">
+                    <img src="https://i.imgur.com/WXNFN93.png" alt="Logo" class="logo-principal">
+                </a>
+                <div class="user-header">
+                    <span class="user-name">👤 Administrador</span>
+                    <a href="#" onclick="logoutAdmin()" class="btn-sair">Sair</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-container">
+            <div class="dashboard-header">
+                <h1>⚙️ Painel Administrativo</h1>
+                <p>Gerencie permissões de usuários do sistema</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="trocarTab('todos')">Todos os Usuários</button>
+                <button class="tab" onclick="trocarTab('docentes')">Docentes</button>
+                <button class="tab" onclick="trocarTab('alunos')">Alunos</button>
+            </div>
+
+            <!-- Adicionar Usuário -->
+            <div class="add-usuario card">
+                <h3>➕ Adicionar Novo Usuário</h3>
+                <form class="form-inline" onsubmit="adicionarUsuario(event)">
+                    <input type="email" id="novoEmail" placeholder="email@fatec.sp.gov.br" required>
+                    <select id="novoTipo" required>
+                        <option value="">Tipo</option>
+                        <option value="docente">Docente</option>
+                        <option value="aluno">Aluno</option>
+                    </select>
+                    <button type="submit" class="btn-exportar">Adicionar</button>
+                </form>
+            </div>
+
+            <!-- Lista de Usuários -->
+            <div class="card">
+                <h2>👥 Usuários Cadastrados (<span id="totalUsuarios">0</span>)</h2>
+                <div id="listaUsuarios" class="usuarios-lista">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script-admin.js"></script>
+</body>
+</html>

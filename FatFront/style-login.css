@@ -113,6 +113,30 @@ body {
     margin: 20px 0;
 }
 
+.btn-microsoft {
+    width: 100%;
+    background: white;
+    color: #5e5e5e;
+    border: 2px solid #8c8c8c;
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.btn-microsoft:hover {
+    background: #f3f3f3;
+    border-color: #5e5e5e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
 .form-complemento {
     display: none;
 }
