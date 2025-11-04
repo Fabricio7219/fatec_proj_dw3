@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Bootstrap Admin Master — FatecWeek</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f6fb;
+      color: #222;
+    }
+    .container {
+      max-width: 600px;
+      margin: 60px auto;
+      padding: 16px;
+    }
+    .card {
+      background: #fff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #273c75;
+      margin-top: 0;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #333;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #0984e3;
+      box-shadow: 0 0 0 2px rgba(9, 132, 227, 0.1);
+    }
+    .btn {
+      background: #0984e3;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      width: 100%;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #0770c9;
+    }
+    .message {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;
+    }
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+    .info {
+      background: #e7f3ff;
+      padding: 12px;
+      border-left: 4px solid #0984e3;
+      margin-bottom: 16px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    a {
+      color: #0984e3;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>🔐 Criar Admin Master</h1>
+      
+      <div class="info">
+        <strong>⚠️ Atenção:</strong> Esta página cria o primeiro administrador do sistema. 
+        Após ser criado, use o <a href="admin.html">painel admin</a> para gerenciar outros administradores.
+      </div>
+
+      <form id="bootstrapForm">
+        <div class="form-group">
+          <label for="nome">Nome completo</label>
+          <input type="text" id="nome" name="nome" required placeholder="Ex: João Silva" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required placeholder="Ex: joao@example.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" required placeholder="Digite uma senha segura" />
+        </div>
+
+        <div class="form-group">
+          <label for="chave">Chave de Bootstrap</label>
+          <input type="password" id="chave" name="chave" required placeholder="Chave secreta do servidor" />
+          <small style="color: #666; display: block; margin-top: 4px;">
+            Verifique no servidor ou .env: <code>ADMIN_BOOTSTRAP_KEY</code>
+          </small>
+        </div>
+
+        <button type="submit" class="btn">Criar Admin Master</button>
+      </form>
+
+      <div id="message" class="message"></div>
+
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; text-align: center;">
+        <a href="index.html">← Voltar</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('bootstrapForm');
+    const messageDiv = document.getElementById('message');
+
+    function showMessage(text, type) {
+      messageDiv.textContent = text;
+      messageDiv.className = `message ${type}`;
+      if (type === 'success') {
+        setTimeout(() => {
+          window.location.href = '/admin.html';
+        }, 2000);
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      messageDiv.className = 'message';
+
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value.trim();
+      const chave = document.getElementById('chave').value.trim();
+
+      if (!nome || !email || !senha || !chave) {
+        showMessage('Preencha todos os campos.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/usuarios/admins/bootstrap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email, senha, chave })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showMessage(data.erro || data.sucesso === false ? data.erro : 'Erro desconhecido.', 'error');
+          return;
+        }
+
+        showMessage('✅ Admin master criado com sucesso! Redirecionando para login...', 'success');
+      } catch (error) {
+        console.error('Erro:', error);
+        showMessage('Erro ao conectar com o servidor: ' + error.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

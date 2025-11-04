@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Aluno - FatecWeek 2025</title>
+    <link rel="stylesheet" href="style-aluno.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
+            <a href="index.html" class="btn-voltar">← Voltar</a>
+        </div>
+    </header>
+
+    <main class="login-container">
+        <div class="login-card">
+            <div class="login-header login-header-aluno">
+                <h1>🎓 Login Aluno</h1>
+                <p>Acesse com sua conta Google</p>
+            </div>
+
+            <div class="login-content">
+                <div id="loginStatus" class="status-message"></div>
+
+                <!-- 🔹 Botão de login via Google -->
+                <a href="http://localhost:3000/api/auth/google" class="btn-google">
+                    <img src="https://developers.google.com/identity/images/g-logo.png" class="google-icon" alt="">
+                    Entrar com Google
+                </a>
+
+                <!-- 🔹 Área visível apenas se estiver logado -->
+                <div id="userInfo" class="user-info" style="display: none;">
+                    <div class="user-card">
+                        <div class="user-avatar user-avatar-aluno" id="userAvatar">🎓</div>
+                        <div class="user-details">
+                            <h3 id="userName"></h3>
+                            <p id="userEmail"></p>
+                            <p id="userRA" class="user-ra"></p>
+                        </div>
+                    </div>
+                    <button class="btn-continue" onclick="continuarParaDashboard()">
+                        Continuar para o Sistema
+                    </button>
+                    <button class="btn-logout" onclick="signOut()">
+                        Sair
+                    </button>
+                </div>
+            </div>
+
+            <div class="login-info">
+                <h3>ℹ️ Informações Importantes</h3>
+                <ul>
+                    <li>Use seu e-mail Google pessoal ou institucional</li>
+                    <li>Seus dados estão protegidos e seguros</li>
+                    <li>Você poderá se inscrever nas palestras após o login</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 FatecWeek - Fatec. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        async function checkLogin() {
+            try {
+                console.log("Verificando login...");
+                const res = await fetch("http://localhost:3000/api/auth/me", { 
+                    credentials: "include",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                console.log("Status da resposta:", res.status);
+
+                if (res.status === 200) {
+                    const user = await res.json();
+                    console.log("Dados do usuário:", user);
+
+                    // 🔹 guarda dados para completar cadastro se necessário
+                    localStorage.setItem("email", user.email);
+                    localStorage.setItem("nome", user.nome);
+
+                    // ✅ Verifica se cadastro está completo
+                    if (user.cadastroCompleto) {
+                        if (user.tipo === "docente") {
+                            console.log("Redirecionando para dashboard docente...");
+                            return window.location.href = "dashboard-docente.html";
+                        } else {
+                            console.log("Redirecionando para dashboard aluno...");
+                            return window.location.href = "dashboard-aluno.html";
+                        }
+                    } else {
+                        console.log("Redirecionando para completar perfil...");
+                        return window.location.href = "completar-perfil.html";
+                    }
+                } else {
+                    console.log("Usuário não autenticado");
+                    document.querySelector('.btn-google').style.display = 'block';
+                    document.getElementById('userInfo').style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Erro ao verificar login:", err);
+                document.querySelector('.btn-google').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'none';
+            }
+        }
+
+        function displayUserInfo(user) {
+            document.querySelector('.btn-google').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('userName').textContent = user.nome;
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userRA').textContent = `RA: ${user.ra}`;
+        }
+
+        async function signOut() {
+            try {
+                await fetch("http://localhost:3000/api/auth/logout", { 
+                    method: "POST", 
+                    credentials: "include"
+                });
+                // Limpa todo o localStorage
+                localStorage.clear();
+                // Limpa qualquer cookie de sessão
+                document.cookie.split(";").forEach(c => {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+                // Redireciona para a página inicial em vez de recarregar
+                window.location.href = "index.html";
+            } catch (err) {
+                console.error("Erro ao fazer logout:", err);
+                alert("Erro ao fazer logout. Tente novamente.");
+            }
+        }
+
+        function continuarParaDashboard() {
+            window.location.href = "dashboard-aluno.html";
+        }
+
+        window.onload = checkLogin;
+    </script>
+</body>
+</html>

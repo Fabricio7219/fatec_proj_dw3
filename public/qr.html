@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registro de Presença (QR) — FatecWeek</title>
+  <style>
+    body{font-family:Segoe UI,Roboto,Arial;margin:0;padding:20px;background:#f5f6fb;color:#222}
+    .card{background:#fff;padding:16px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);max-width:640px;margin:0 auto}
+    .btn{background:#0984e3;color:#fff;border:none;padding:10px 14px;border-radius:6px;cursor:pointer}
+    .danger{background:#e74c3c}
+    .hidden{display:none}
+    .muted{color:#666;font-size:0.95rem}
+    h1{font-size:1.25rem;margin:0 0 8px}
+    .mt{margin-top:10px}
+    .center{text-align:center}
+    code{background:#f0f0f0;padding:2px 4px;border-radius:4px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Registro de Presença via QR</h1>
+    <div id="palestraInfo" class="muted">Carregando detalhes da palestra...</div>
+    <div id="status" class="muted mt">Validando...</div>
+    <div id="result" class="mt"></div>
+    <div class="mt center">
+      <button id="btnEntrada" class="btn hidden">Dar entrada</button>
+      <button id="btnSaida" class="btn hidden">Dar saída</button>
+      <button id="btnRetry" class="btn hidden">Tentar novamente</button>
+      <button id="btnLogin" class="btn hidden">Entrar com Google</button>
+      <button id="btnDashboard" class="btn hidden">Ir para o painel</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const qs = new URLSearchParams(location.search);
+  const palestraId = qs.get('p');
+  const statusEl = document.getElementById('status');
+  const resultEl = document.getElementById('result');
+  const btnLogin = document.getElementById('btnLogin');
+  const btnRetry = document.getElementById('btnRetry');
+  const btnDashboard = document.getElementById('btnDashboard');
+
+  function show(el){ el.classList.remove('hidden'); }
+  function hide(el){ el.classList.add('hidden'); }
+
+  if(!palestraId){
+    statusEl.textContent = 'QR inválido: parâmetro "p" ausente.';
+    resultEl.innerHTML = '<p class="muted">Peça ao organizador um novo QR.</p>';
+    return;
+  }
+
+  async function fetchJson(url, opts){
+    const res = await fetch(url, { credentials:'include', headers:{'Content-Type':'application/json'}, ...opts});
+    if (res.status === 401) throw { unauthorized:true };
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok) throw data;
+    return data;
+  }
+
+  async function carregarPalestra(){
+    try{
+      const resp = await fetchJson('/api/palestras/' + encodeURIComponent(palestraId));
+      const p = resp && resp.dados ? resp.dados : resp;
+      const d = p && p.data ? new Date(p.data) : null;
+      const quando = d ? `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : 'Data a definir';
+      document.getElementById('palestraInfo').textContent = `${p.titulo || 'Palestra'} — ${quando}`;
+    }catch(e){
+      document.getElementById('palestraInfo').textContent = 'Palestra';
+    }
+  }
+
+  async function ensureLogin(){
+    try{
+      const me = await fetchJson('/api/auth/me');
+      return me;
+    }catch(err){
+      if (err && err.unauthorized){
+        // Redireciona para o login com retorno para esta página
+        const back = encodeURIComponent(location.pathname + location.search);
+        window.location.href = '/api/auth/google?returnTo=' + back;
+        return null;
+      }
+      throw err;
+    }
+  }
+
+  async function registrarEntrada(){
+    statusEl.textContent = 'Registrando entrada...';
+    resultEl.innerHTML = '';
+    try{
+      const resp = await fetchJson('/api/presenca/entrada', {
+        method: 'POST',
+        body: JSON.stringify({ palestraId, modo: 'qr', qrData: window.location.href })
+      });
+      statusEl.textContent = '✅ Entrada registrada!';
+      const d = resp && resp.dados ? resp.dados : resp;
+      resultEl.innerHTML = '<p>Obrigado! Sua entrada foi registrada.</p>';
+      show(btnDashboard);
+    }catch(err){
+      console.error(err);
+      if (err && err.erro){
+        statusEl.textContent = 'Não foi possível registrar.';
+        resultEl.innerHTML = '<p class="muted">' + (err.erro || 'Tente novamente em instantes') + '</p>';
+      } else {
+        statusEl.textContent = 'Erro inesperado.';
+        resultEl.innerHTML = '<p class="muted">Tente novamente em instantes</p>';
+      }
+      show(btnRetry);
+    }
+  }
+
+  async function registrarSaida(){
+    statusEl.textContent = 'Registrando saída...';
+    resultEl.innerHTML = '';
+    try{
+      const resp = await fetchJson('/api/presenca/saida', {
+        method: 'POST',
+        body: JSON.stringify({ palestraId, modo: 'qr', qrData: window.location.href })
+      });
+      statusEl.textContent = '✅ Saída registrada!';
+      resultEl.innerHTML = '<p>Obrigado! Sua saída foi registrada.</p>';
+      show(btnDashboard);
+    }catch(err){
+      console.error(err);
+      if (err && err.erro){
+        statusEl.textContent = 'Não foi possível registrar a saída.';
+        resultEl.innerHTML = '<p class="muted">' + (err.erro || 'Tente novamente em instantes') + '</p>';
+      } else {
+        statusEl.textContent = 'Erro inesperado.';
+        resultEl.innerHTML = '<p class="muted">Tente novamente em instantes</p>';
+      }
+      show(btnRetry);
+    }
+  }
+
+  btnRetry.addEventListener('click', ()=>{ statusEl.textContent=''; resultEl.innerHTML=''; });
+  btnEntrada.addEventListener('click', registrarEntrada);
+  btnSaida.addEventListener('click', registrarSaida);
+  btnLogin.addEventListener('click', ()=>{
+    const back = encodeURIComponent(location.pathname + location.search);
+    window.location.href = '/api/auth/google?returnTo=' + back;
+  });
+  btnDashboard.addEventListener('click', ()=>{
+    window.location.href = '/dashboard-aluno.html';
+  });
+
+  (async function init(){
+    try{
+      const me = await ensureLogin();
+      if (!me) return; // redirecionou para login
+      await carregarPalestra();
+      // Mostra botões de ação
+      show(btnEntrada);
+      show(btnSaida);
+      statusEl.textContent = 'Selecione uma ação: dar entrada ou saída.';
+    }catch(err){
+      console.error(err);
+      statusEl.textContent = 'Erro ao validar usuário.';
+      show(btnLogin);
+    }
+  })();
+})();
+</script>
+</body>
+</html>

@@ -3,9 +3,12 @@ const bcrypt = require('bcrypt');
 
 const usuarioSchema = new mongoose.Schema({
     nome: { type: String, required: true },
-    ra: { type: String, required: false, unique: true, sparse: true },
+    ra: { type: String, required: false }, // Removido unique: true daqui
     email: { type: String, required: true, unique: true },
-    senha: { type: String, required: true },
+    // senha agora é opcional: usuários que se registram via OAuth não precisarão de senha
+    senha: { type: String, required: false },
+    // tipo indica se é 'aluno' ou 'docente' (padrão 'aluno')
+    tipo: { type: String, enum: ['aluno', 'docente', 'admin'], default: 'aluno' },
     curso: { type: String, enum: [
         "Automação Industrial",
         "Desenvolvimento de Software Multiplataforma",
@@ -29,7 +32,7 @@ const usuarioSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 usuarioSchema.pre('save', async function(next) {
-    if (!this.isModified('senha')) return next();
+    if (!this.isModified('senha') || !this.senha) return next();
     this.senha = await bcrypt.hash(this.senha, 10);
     next();
 });

@@ -5,20 +5,31 @@
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "dev": "nodemon src/app.js",
+    "create-admin": "node src/scripts/create-admin.js",
+    "drop-index": "node src/scripts/drop-ra-index.js",
+    "docs:pdf": "node src/scripts/generate-docs-pdf.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@azure/msal-browser": "^4.25.1",
+    "@azure/msal-node": "^3.8.0",
+    "@azure/msal-react": "^3.0.20",
+    "@sendgrid/mail": "^8.1.6",
     "bcrypt": "^6.0.0",
-    "dotenv": "^17.2.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "mongoose": "^8.18.1",
+    "nodemailer": "^7.0.10",
     "passport": "^0.7.0",
+    "passport-azure-ad": "^4.3.5",
     "passport-google-oauth20": "^2.0.0",
-    "pdfkit": "^0.17.2"
+    "pdfkit": "^0.17.2",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

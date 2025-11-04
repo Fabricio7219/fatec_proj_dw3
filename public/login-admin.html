@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Login Admin — FatecWeek</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:Segoe UI,Roboto,Arial;margin:0;padding:0;background:#f5f6fb;color:#222}
+    .container{max-width:720px;margin:40px auto;padding:16px}
+    .card{background:#fff;padding:20px;border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+    .btn{background:#0984e3;color:#fff;border:none;padding:10px 14px;border-radius:6px;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h2>Acesso Administrativo</h2>
+      <p>Use sua conta Google para acessar o painel administrativo. Sua conta precisa estar cadastrada como <strong>docente</strong> ou <strong>administrador</strong> no sistema.</p>
+      <p class="small">Ao clicar em "Entrar com Google" você será direcionado para a página de autenticação. Se o cadastro existir, volte para <code>/admin.html</code> ou abra o painel novamente.</p>
+      <div style="margin-top:12px">
+        <button class="btn" onclick="window.location.href='/api/auth/google'">Entrar com Google</button>
+        <a href="/admin.html" style="margin-left:12px">Voltar ao painel</a>
+      </div>
+      <hr />
+      <p class="small">Se preferir login por credenciais locais (email/senha) ainda não implementamos na interface; use a autenticação Google.</p>
+    </div>
+  </div>
+</body>
+</html>

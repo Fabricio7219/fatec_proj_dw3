@@ -1,40 +1,89 @@
-require('dotenv').config(); // ⚠️ Deve vir antes de qualquer importação que use env
+require('dotenv').config();
 
-const express = require("express");
-const session = require("express-session");
-const passport = require("passport");
-require("./config/passport"); // importa passport configurado
-const { connectToDatabase } = require("./config/database");
-const participanteRoutes = require("./routes/participantes");
-const usuarioRoutes = require("./routes/usuarioRoutes");
+const { configureSecurity } = require('./utils/security');
+
+// Configurar segurança baseado no ambiente
+configureSecurity();
+
+const express = require('express');
+const passport = require('passport');
+const session = require('express-session');
+const cors = require('cors');
+const path = require('path');
+
+require('./config/passportGoogle');
+const { connectToDatabase } = require('./config/database');
+
+// Rotas API
+const authRoutes = require('./routes/authRoutes');
+const docenteRoutes = require('./routes/docenteRoutes');
+const participanteRoutes = require('./routes/participantes');
+const usuarioRoutes = require('./routes/usuarioRoutes');
+const relatoriosRoutes = require('./routes/relatorios');
+const presencaRoutes = require('./routes/presenca');
+const inscricoesRoutes = require('./routes/inscricoes');
+const palestrasRoutes = require('./routes/palestras');
+const pontosRoutes = require('./routes/pontos');
 
 connectToDatabase();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-
-// Sessões
-app.use(session({
-    secret: "seuSegredoAqui",
-    resave: false,
-    saveUninitialized: true
+app.use(cors({
+  origin: true,
+  credentials: true
 }));
 
-// Inicializa Passport
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'seuSegredoAqui',
+    resave: false,
+    saveUninitialized: false,
+    name: 'fatecweek.sid',
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000 // 24 horas
+    }
+  })
+);
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Rotas
-app.use("/participantes", participanteRoutes);
-app.use("/usuarios", usuarioRoutes);
+// ✅ AQUI — SERVIR OS ARQUIVOS HTML
+// Serve arquivos da raiz do projeto (volta um nível a partir de /src)
+// 🗂️ Arquivos estáticos (HTML/CSS/JS)
+app.use(express.static('public'));
 
-app.get("/", (req, res) => {
-    res.send("🚀 API Fatec funcionando!");
+
+
+// Agora abre:
+// http://localhost:3000/login-aluno.html
+// http://localhost:3000/completar.html
+// http://localhost:3000/dashboard-aluno.html
+// http://localhost:3000/dashboard-docente.html
+
+// Rotas API
+app.use('/api/auth', authRoutes);
+app.use('/api/docentes', docenteRoutes);
+app.use('/api/participantes', participanteRoutes);
+app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/relatorios', relatoriosRoutes);
+app.use('/api/presenca', presencaRoutes);
+app.use('/api/inscricoes', inscricoesRoutes);
+app.use('/api/palestras', palestrasRoutes);
+app.use('/api/pontos', pontosRoutes);
+
+app.get('/', (req, res) => {
+  res.send('🚀 API rodando.');
 });
 
-const relatoriosRoutes = require("./routes/relatorios");
-app.use("/relatorios", relatoriosRoutes);
+app.use((req, res) => res.status(404).json({ erro: 'Rota não encontrada' }));
 
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Servidor rodando na porta ${PORT}`));

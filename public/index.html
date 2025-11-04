@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FatecWeek 2025 - Página Inicial</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="logo-link">
+                <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
+            </a>
+            <div class="header-buttons">
+                <a href="login-docente.html" class="btn btn-secondary">👨‍🏫 Sou Docente</a>
+                <a href="login-aluno.html" class="btn btn-secondary">🎓 Sou Aluno</a>
+                <a href="admin.html" class="btn-admin" title="Área Administrativa">⚙️</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Carrossel de Imagens -->
+        <section class="carousel-container">
+            <div class="carousel">
+                <div class="carousel-track" id="carouselTrack">
+                    <div class="carousel-slide active">
+                        <img src="https://images.unsplash.com/photo-1606761568499-6d2451b23c66?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1074" alt="Slide 1">
+                        <div class="carousel-caption">
+                            <h3>Bem-vindos ao FatecWeek 2025</h3>
+                            <p>O maior evento de tecnologia da Fatec</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170" alt="Slide 2">
+                        <div class="carousel-caption">
+                            <h3>Palestras e Workshops</h3>
+                            <p>Conteúdo de qualidade com especialistas</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170" alt="Slide 3">
+                        <div class="carousel-caption">
+                            <h3>Networking</h3>
+                            <p>Conecte-se com profissionais da área</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="carousel-btn prev" onclick="moveSlide(-1)">&#10094;</button>
+                <button class="carousel-btn next" onclick="moveSlide(1)">&#10095;</button>
+                
+                <div class="carousel-dots">
+                    <span class="dot active" onclick="currentSlide(1)"></span>
+                    <span class="dot" onclick="currentSlide(2)"></span>
+                    <span class="dot" onclick="currentSlide(3)"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="sobre card">
+            <h2>Sobre o Evento</h2>
+            <p>A FatecWeek 2025 é o maior evento de tecnologia e inovação da Fatec, reunindo estudantes, professores e profissionais da área para compartilhar conhecimento e experiências,
+                Durante uma semana inteira, você terá acesso a palestras, workshops, minicursos e apresentações de projetos que vão expandir seus horizontes na área da tecnologia.</p>
+            <p><b>Este é o momento perfeito para fazer networking, aprender novas tecnologias e descobrir as tendências que estão moldando o futuro da nossa área.</b></p>
+        </section>
+
+        <section class="info-grid">
+            <div class="info-card card">
+                <h3>📅 Quando</h3>
+                <p><b>De 16 a 17 de Outubro de 2025</b><br>Das 19h às 22h40<br><b>Sábado dia 18</b><br> das 10h as 17h</p>
+            </div>
+
+            <div class="info-card card">
+                <h3>📍 Onde</h3>
+                <p>Fatec - Osasco<br>Prefeito Hirant Sanazar</p>
+            </div>
+
+            <div class="info-card card">
+                <h3>🎯 Para Quem</h3>
+                <p>Estudantes da Fatec<br>Profissionais de TI<br>Interessados em Tecnologia</p>
+            </div>
+
+            <div class="info-card card">
+                <h3>💰 Investimento</h3>
+                <p>Evento Gratuito<br>Certificado de Participação<br>Material Digital Incluso</p>
+            </div>
+
+            <div class="info-card card">
+                <h3>🏆 Benefícios</h3>
+                <p>Certificado de 20 horas<br>Networking<br>Conhecimento Atualizado</p>
+            </div>
+
+            <div class="info-card card">
+                <h3>📱 Tecnologia</h3>
+                <p>Controle por QR Code<br>Sistema Digital<br>Relatórios Automáticos</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 FatecWeek - Fatec. Todos os direitos reservados.</p>
+        <p>Sistema desenvolvido para controle de participação em eventos acadêmicos.</p>
+        <div style="display: flex; gap: 8px; justify-content: center;">
+          <a href="admin.html" class="admin-link" title="Acesso Administrativo">⚙️</a>
+          <a href="bootstrap-admin.html" class="admin-link" title="Criar Admin Master">🔑</a>
+        </div>
+    </footer>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+        const dots = document.querySelectorAll('.dot');
+        const track = document.getElementById('carouselTrack');
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            slides[index].classList.add('active');
+            dots[index].classList.add('active');
+            
+            track.style.transform = `translateX(-${index * 100}%)`;
+            
+            currentSlideIndex = index;
+        }
+
+        function moveSlide(direction) {
+            const newIndex = currentSlideIndex + direction;
+            
+            if (newIndex >= slides.length) {
+                showSlide(0);
+            } else if (newIndex < 0) {
+                showSlide(slides.length - 1);
+            } else {
+                showSlide(newIndex);
+            }
+        }
+
+        function currentSlide(index) {
+            showSlide(index - 1);
+        }
+
+        setInterval(() => {
+            moveSlide(1);
+        }, 5000);
+    </script>
+</body>
+</html>
