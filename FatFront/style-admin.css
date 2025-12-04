@@ -12,15 +12,16 @@ body {
     line-height: 1.6;
 }
 
-/* Header padrão */
+/* Header - Mesmo padrão do Index */
 .header {
     background-color: #E0E0E0;
     padding: 20px;
+    border-radius: 0 0 12px 12px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .header-content {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -28,7 +29,7 @@ body {
 }
 
 .logo-principal {
-    max-height: 50px;
+    max-height: 60px;
     height: auto;
 }
 
@@ -53,42 +54,54 @@ body {
     font-size: 16px;
 }
 
-.btn-sair {
-    background: #c41e3a;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: bold;
-    transition: all 0.3s ease;
-}
-
-.btn-sair:hover {
-    background: #8b1538;
-}
-
-/* Tela de Login Admin */
+/* Tela de Login Admin - Padrão FATEC */
 .admin-login {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #E0E0E0;
+    padding: 20px;
+}
+
+.login-container {
+    max-width: 450px;
+    width: 100%;
+}
+
+.logo-link-center {
+    display: block;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo-login {
+    max-height: 80px;
+    height: auto;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
 }
 
 .login-box {
     background: white;
     padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    max-width: 400px;
-    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
 }
 
-.login-box h1 {
+.login-header {
     text-align: center;
-    color: #667eea;
     margin-bottom: 30px;
+}
+
+.login-header h1 {
+    color: #c41e3a;
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.login-header p {
+    color: #666;
+    font-size: 14px;
 }
 
 .form-group {
@@ -99,135 +112,186 @@ body {
     display: block;
     margin-bottom: 8px;
     font-weight: bold;
+    color: #333;
 }
 
 .form-group input {
     width: 100%;
-    padding: 12px;
-    border: 2px solid #e0e0e0;
+    padding: 12px 15px;
+    border: 2px solid #ddd;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #c41e3a;
+    box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
 }
 
-.btn-login {
-    width: 100%;
-    padding: 15px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+.login-hint {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 13px;
+    color: #666;
+}
+
+.login-hint strong {
+    color: #c41e3a;
+}
+
+/* Botões - Padrão FATEC */
+.btn {
+    padding: 12px 25px;
     border: none;
     border-radius: 8px;
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
     transition: all 0.3s ease;
-}
-
-.btn-login:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-
-/* Dashboard Admin */
-.dashboard-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 30px 20px;
-}
-
-.dashboard-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 30px;
-    border-radius: 12px;
-    margin-bottom: 30px;
     text-align: center;
 }
 
-.dashboard-header h1 {
-    font-size: 32px;
+.btn-primary {
+    background: linear-gradient(135deg, #c41e3a, #8b1538);
+    color: white;
+    width: 100%;
+    box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: #c41e3a;
+    border: 2px solid #c41e3a;
+    padding: 10px 20px;
+}
+
+.btn-secondary:hover {
+    background: #c41e3a;
+    color: white;
+}
+
+/* Container - Mesmo padrão do Index */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+/* Cards - Mesmo padrão do Index */
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+}
+
+.card h1 {
+    color: #c41e3a;
+    font-size: 28px;
     margin-bottom: 10px;
 }
 
-.dashboard-header p {
+.card h2 {
+    color: #c41e3a;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.card h3 {
+    color: #c41e3a;
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.card p {
+    color: #666;
     font-size: 16px;
-    opacity: 0.9;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    text-align: center;
+    background: linear-gradient(135deg, #c41e3a 0%, #8b1538 100%);
+    color: white;
+}
+
+.dashboard-header h1,
+.dashboard-header p {
+    color: white;
 }
 
 /* Tabs */
 .tabs {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #e0e0e0;
+    flex-wrap: wrap;
+    padding: 20px;
 }
 
 .tab {
     padding: 12px 24px;
     cursor: pointer;
-    border: none;
-    background: none;
+    border: 2px solid #ddd;
+    background: white;
     font-weight: bold;
     color: #666;
-    border-bottom: 3px solid transparent;
+    border-radius: 8px;
     transition: all 0.3s ease;
+    font-size: 14px;
 }
 
 .tab:hover {
-    color: #667eea;
+    border-color: #c41e3a;
+    color: #c41e3a;
 }
 
 .tab.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
-}
-
-/* Cards */
-.card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    padding: 30px;
-    margin-bottom: 30px;
-}
-
-.card h2 {
-    color: #333;
-    margin-bottom: 20px;
-    font-size: 24px;
+    background: #c41e3a;
+    color: white;
+    border-color: #c41e3a;
 }
 
 /* Adicionar Usuário */
-.add-usuario h3 {
-    margin-top: 0;
-    color: #667eea;
-    font-size: 20px;
-    margin-bottom: 15px;
+.add-usuario {
+    background: #f8f9fa;
 }
 
 .form-inline {
     display: grid;
     grid-template-columns: 2fr 1fr auto;
-    gap: 10px;
+    gap: 15px;
     align-items: end;
 }
 
 .form-inline input,
 .form-inline select {
-    padding: 12px;
-    border: 2px solid #e0e0e0;
+    padding: 12px 15px;
+    border: 2px solid #ddd;
     border-radius: 8px;
     font-size: 14px;
+    transition: border-color 0.3s ease;
 }
 
 .form-inline input:focus,
 .form-inline select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #c41e3a;
+    box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+}
+
+.form-inline .btn {
+    padding: 12px 30px;
+    white-space: nowrap;
 }
 
 /* Lista de Usuários */
@@ -244,7 +308,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-left: 4px solid;
+    border-left: 5px solid;
     transition: all 0.3s ease;
 }
 
@@ -255,16 +319,19 @@ body {
 
 .usuario-item.docente {
     border-left-color: #c41e3a;
+    background: linear-gradient(to right, #fff5f6 0%, #f8f9fa 100%);
 }
 
 .usuario-item.aluno {
     border-left-color: #0066cc;
+    background: linear-gradient(to right, #f0f6ff 0%, #f8f9fa 100%);
 }
 
 .usuario-info h4 {
     margin: 0 0 5px 0;
     color: #333;
     font-size: 16px;
+    font-weight: bold;
 }
 
 .usuario-info p {
@@ -278,50 +345,66 @@ body {
     gap: 10px;
 }
 
-/* Botões */
+/* Botões de Ação */
 .btn-toggle {
     padding: 8px 16px;
-    border: none;
+    border: 2px solid;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
     transition: all 0.3s ease;
     white-space: nowrap;
+    font-size: 13px;
 }
 
 .btn-toggle:hover {
-    opacity: 0.8;
     transform: translateY(-2px);
 }
 
 .btn-docente {
     background: #c41e3a;
     color: white;
+    border-color: #c41e3a;
+}
+
+.btn-docente:hover {
+    background: #8b1538;
 }
 
 .btn-aluno {
     background: #0066cc;
     color: white;
+    border-color: #0066cc;
+}
+
+.btn-aluno:hover {
+    background: #0052a3;
 }
 
 .btn-remover {
+    background: white;
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-remover:hover {
     background: #dc3545;
     color: white;
 }
 
-.btn-exportar {
-    padding: 10px 20px;
-    background: #28a745;
+/* Footer - Mesmo padrão do Index */
+.footer {
+    background: #333;
     color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.3s ease;
+    text-align: center;
+    padding: 25px 20px;
+    margin-top: 40px;
 }
 
-.btn-exportar:hover {
-    background: #218838;
+.footer p {
+    font-size: 14px;
+    opacity: 0.8;
+    margin: 5px 0;
 }
 
 /* Responsividade */
@@ -335,19 +418,31 @@ body {
     .user-header {
         flex-direction: column;
         gap: 10px;
+        width: 100%;
     }
 
-    .dashboard-header h1 {
-        font-size: 24px;
+    .user-header .btn {
+        width: 100%;
+    }
+
+    .container {
+        padding: 20px 15px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .logo-principal {
+        max-height: 50px;
     }
 
     .tabs {
-        flex-wrap: wrap;
+        flex-direction: column;
     }
 
     .tab {
-        flex: 1;
-        min-width: 100px;
+        width: 100%;
     }
 
     .form-inline {
@@ -358,6 +453,7 @@ body {
         flex-direction: column;
         gap: 15px;
         text-align: center;
+        align-items: stretch;
     }
 
     .usuario-acoes {
@@ -367,5 +463,13 @@ body {
 
     .btn-toggle {
         width: 100%;
+    }
+
+    .login-box {
+        padding: 30px 20px;
+    }
+
+    .login-header h1 {
+        font-size: 24px;
     }
 }

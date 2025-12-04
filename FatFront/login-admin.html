@@ -9,22 +9,33 @@
 <body>
     <!-- Tela de Login Admin -->
     <div id="adminLogin" class="admin-login">
-        <div class="login-box">
-            <h1>🔐 Login Administrativo</h1>
-            <form onsubmit="loginAdmin(event)">
-                <div class="form-group">
-                    <label>Usuário:</label>
-                    <input type="text" id="adminUser" required placeholder="admin">
+        <div class="login-container">
+            <a href="index.html" class="logo-link-center">
+                <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-login">
+            </a>
+            
+            <div class="login-box">
+                <div class="login-header">
+                    <h1>⚙️ Acesso Administrativo</h1>
+                    <p>Sistema de Gerenciamento FatecWeek 2025</p>
                 </div>
-                <div class="form-group">
-                    <label>Senha:</label>
-                    <input type="password" id="adminPass" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn-login">Entrar</button>
-            </form>
-            <p style="margin-top: 20px; text-align: center; font-size: 12px; color: #999;">
-                Credenciais padrão: admin / admin123
-            </p>
+                
+                <form onsubmit="loginAdmin(event)">
+                    <div class="form-group">
+                        <label>Usuário:</label>
+                        <input type="text" id="adminUser" required placeholder="admin">
+                    </div>
+                    <div class="form-group">
+                        <label>Senha:</label>
+                        <input type="password" id="adminPass" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Entrar no Sistema</button>
+                </form>
+                
+                <p class="login-hint">
+                    Credenciais padrão: <strong>admin</strong> / <strong>admin123</strong>
+                </p>
+            </div>
         </div>
     </div>
 
@@ -33,26 +44,26 @@
         <header class="header">
             <div class="header-content">
                 <a href="index.html" class="logo-link">
-                    <img src="https://i.imgur.com/WXNFN93.png" alt="Logo" class="logo-principal">
+                    <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
                 </a>
                 <div class="user-header">
                     <span class="user-name">👤 Administrador</span>
-                    <a href="#" onclick="logoutAdmin()" class="btn-sair">Sair</a>
+                    <a href="#" onclick="logoutAdmin()" class="btn btn-secondary">Sair</a>
                 </div>
             </div>
         </header>
 
-        <main class="dashboard-container">
-            <div class="dashboard-header">
+        <main class="container">
+            <div class="dashboard-header card">
                 <h1>⚙️ Painel Administrativo</h1>
-                <p>Gerencie permissões de usuários do sistema</p>
+                <p>Gerencie permissões de usuários do sistema FatecWeek 2025</p>
             </div>
 
             <!-- Tabs -->
-            <div class="tabs">
+            <div class="tabs card">
                 <button class="tab active" onclick="trocarTab('todos')">Todos os Usuários</button>
-                <button class="tab" onclick="trocarTab('docentes')">Docentes</button>
-                <button class="tab" onclick="trocarTab('alunos')">Alunos</button>
+                <button class="tab" onclick="trocarTab('docentes')">👨‍🏫 Docentes</button>
+                <button class="tab" onclick="trocarTab('alunos')">🎓 Alunos</button>
             </div>
 
             <!-- Adicionar Usuário -->
@@ -61,11 +72,11 @@
                 <form class="form-inline" onsubmit="adicionarUsuario(event)">
                     <input type="email" id="novoEmail" placeholder="email@fatec.sp.gov.br" required>
                     <select id="novoTipo" required>
-                        <option value="">Tipo</option>
-                        <option value="docente">Docente</option>
-                        <option value="aluno">Aluno</option>
+                        <option value="">Selecione o tipo</option>
+                        <option value="docente">👨‍🏫 Docente</option>
+                        <option value="aluno">🎓 Aluno</option>
                     </select>
-                    <button type="submit" class="btn-exportar">Adicionar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
                 </form>
             </div>
 
@@ -77,6 +88,11 @@
                 </div>
             </div>
         </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 FatecWeek - Fatec. Todos os direitos reservados.</p>
+            <p>Sistema desenvolvido para controle de participação em eventos acadêmicos.</p>
+        </footer>
     </div>
 
     <script src="script-admin.js"></script>
