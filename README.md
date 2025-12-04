@@ -1,13 +1,14 @@
 # FatecWeek — Sistema de Presenças, Pontos e Painel Admin
 
-Plataforma para gestão da Fatec Week: autenticação via Google, inscrições em palestras, controle de presenças (QR/GPS), emissão de certificado, pontuação por atividade e painel para administradores e docentes.
+Plataforma completa para gestão da Fatec Week: autenticação via Google, inscrições em palestras, controle de presenças (QR Code + Geolocalização), emissão automática de certificados em PDF, pontuação por atividade e painel administrativo moderno.
 
 ## Visão geral
 
-- Backend: Node.js + Express + Passport (Google OAuth 2.0) + Mongoose/MongoDB
-- Frontend: páginas estáticas em `public/` (admin, dashboards, login, completar perfil, QR)
-- Sessão: `express-session` (cookie httpOnly, sameSite=lax)
-- Pontos e certificado: pontos por palestra (definido pelo admin) e por voluntariado; certificado ao atingir tempo mínimo
+- **Backend**: Node.js + Express + Passport (Google OAuth 2.0) + Mongoose/MongoDB
+- **Frontend**: Páginas estáticas em `public/` (Admin, Dashboards, Login, QR Code)
+- **Presença**: Validação dupla via QR Code e Geolocalização (GPS), com temporizador de saída inteligente (libera após 20% da duração).
+- **Certificados**: Geração automática de PDF (Layout A4 Paisagem, cores institucionais) ao atingir 60% de permanência.
+- **Segurança**: Sessões seguras, proteção contra fraudes de GPS, e headers de segurança (Helmet).
 
 ## Arquitetura (pastas principais)
 
@@ -21,6 +22,7 @@ Plataforma para gestão da Fatec Week: autenticação via Google, inscrições e
 
 - Node 18+ (recomendado)
 - MongoDB local ou remoto (URI no `.env`)
+- **HTTPS**: Obrigatório para funcionamento da Geolocalização em dispositivos móveis (exceto localhost).
 
 ## Setup
 
@@ -76,7 +78,7 @@ EMAIL_FROM=fatecweek@exemplo.com
 # Opções de presença/certificado (padrões)
 PRESENCA_TOL_BEFORE_MINUTES=30
 PRESENCA_TOL_AFTER_MINUTES=30
-CERT_THRESHOLD_MINUTES=90
+CERT_THRESHOLD_PERCENT=60
 FILE_ENCRYPTION_KEY=fraseSuperSecretaOpcional
 ```
 
@@ -99,12 +101,12 @@ A aplicação sobe em `http://localhost:3000`.
 
 ## Páginas (public/)
 
-- `/admin.html` — Painel Administrador (Criar palestras, QR, listar presenças, gerenciar docentes, creditar voluntariado, admins)
-- `/dashboard-docente.html` — Painel Docente
-- `/dashboard-aluno.html` — Painel Aluno
+- `/admin.html` — Painel Administrador (Criar palestras com seletores de data/hora, QR Code, listar presenças, gerenciar docentes, creditar voluntariado, admins)
+- `/dashboard-docente.html` — Painel Docente (Métricas e gestão)
+- `/dashboard-aluno.html` — Painel Aluno (Inscrições, estatísticas de horas/certificados, download de certificados)
 - `/completar-perfil.html` — Completar perfil (RA/curso/semestre para aluno; dados básicos para docente)
-- `/login-aluno.html`, `/login-docente.html`, `/login-admin.html` — Telas de login
-- `/qr.html?p=:id` — Ponto de leitura de QR (fluxo de presença)
+- `/login-aluno.html`, `/login-docente.html`, `/login-admin.html` — Telas de login (Redirecionamento inteligente)
+- `/qr.html?p=:id` — Ponto de leitura de QR (Fluxo de presença com validação de GPS e Timer)
 
 ## Rotas principais (API)
 
@@ -151,9 +153,11 @@ A aplicação sobe em `http://localhost:3000`.
 
 - Presença
   - Janela de tolerância: antes do início e após o fim (default: 30/30 min)
-  - Certificado: se permanência ≥ `CERT_THRESHOLD_MINUTES` (default 90 min)
-    - Quando `FILE_ENCRYPTION_KEY` estiver definida, cada certificado em PDF também gera uma cópia criptografada (`.enc`) usando AES-256-CBC para armazenamento seguro.
-  - Modos: GPS (verifica perímetro) e QR (válido dentro da janela)
+  - **Regra de Saída**: O botão de registrar saída só é habilitado após decorridos 20% da duração da palestra.
+  - **Certificado**: Emitido automaticamente se permanência ≥ `CERT_THRESHOLD_PERCENT` (default 60%).
+    - O PDF é gerado no formato A4 Paisagem, com bordas nas cores da Fatec e dados dinâmicos.
+    - Quando `FILE_ENCRYPTION_KEY` estiver definida, gera também uma cópia criptografada (`.enc`).
+  - Modos: GPS (verifica perímetro com precisão) e QR (válido dentro da janela).
 
 - QR Code
   - O QR aponta para `/qr.html?p=:id` e direciona o fluxo de presença
