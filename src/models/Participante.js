@@ -43,16 +43,22 @@ const participanteSchema = new mongoose.Schema({
     ],
     default: "Fatec Osasco"
   },
-  email: { type: String, required: true },
+  email: { type: String, required: true, lowercase: true, trim: true },
   presente: { type: Boolean, default: false },
   horario_entrada: { type: Date, default: null },
   horario_saida: { type: Date, default: null },
   tempo_total_minutos: { type: Number, default: 0 },
   // Pontuação acumulada por atividades/presenças (para somar à nota)
   pontos_total: { type: Number, default: 0 },
+  ultimaPontuacaoEm: { type: Date },
+  cadastroCompletoEm: { type: Date },
+  ultimaSincronizacao: { type: Date },
   ativo: { type: Boolean, default: true },
   usuarioId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }
 }, { timestamps: true });
+
+participanteSchema.index({ email: 1 }, { unique: true });
+participanteSchema.index({ usuarioId: 1 }, { sparse: true });
 
 // 📘 Métodos auxiliares
 participanteSchema.statics.buscarPorRA = async function (ra) {

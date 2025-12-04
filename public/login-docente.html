@@ -27,7 +27,7 @@
                 <div id="loginStatus" class="status-message"></div>
 
                 <!-- 🔹 Botão Google -->
-                <a href="http://localhost:3000/api/auth/google" class="btn-google">
+                <a href="/api/auth/google" class="btn-google">
                     <img src="https://developers.google.com/identity/images/g-logo.png" class="google-icon">
                     Entrar com Google
                 </a>
@@ -70,7 +70,7 @@
     <script>
         async function checkLogin() {
             try {
-                const res = await fetch("http://localhost:3000/api/auth/me", { credentials: "include" });
+                const res = await fetch("/api/auth/me", { credentials: "include" });
 
                 if (res.status === 200) {
                     const user = await res.json();
@@ -80,16 +80,11 @@
                     localStorage.setItem("nome", user.nome);
 
                     // ✅ Se ainda não completou cadastro → vai para completar
-                    if (!user.cadastroCompleto) {
+                    if (!user.tipo || user.tipo !== "docente" || !user.fatec || !user.cursos || user.cursos.length === 0) {
                         return window.location.href = "completar-perfil.html";
                     }
 
-                    // ✅ Se é aluno, redireciona para área de aluno
-                    if (user.tipo === "aluno") {
-                        return window.location.href = "dashboard-aluno.html";
-                    }
-
-                    // ✅ Se cadastro completo e é docente, exibir informações
+                    // ✅ Se cadastro completo, exibir informações
                     displayUserInfo(user);
                 }
             } catch (err) {
@@ -106,23 +101,9 @@
         }
 
         async function signOut() {
-            try {
-                await fetch("http://localhost:3000/api/auth/logout", { 
-                    method: "POST", 
-                    credentials: "include"
-                });
-                // Limpa todo o localStorage
-                localStorage.clear();
-                // Limpa qualquer cookie de sessão
-                document.cookie.split(";").forEach(c => {
-                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-                });
-                // Redireciona para a página inicial em vez de recarregar
-                window.location.href = "index.html";
-            } catch (err) {
-                console.error("Erro ao fazer logout:", err);
-                alert("Erro ao fazer logout. Tente novamente.");
-            }
+            await fetch("http://localhost:3000/api/auth/logout", { method: "POST", credentials: "include" });
+            localStorage.clear();
+            window.location.reload();
         }
 
         function continuarParaDashboard() {

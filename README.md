@@ -49,6 +49,9 @@ MONGO_URI=mongodb://localhost:27017/fatecweek
 # Sessão Express
 SESSION_SECRET=suaChaveSecreta
 ADMIN_BOOTSTRAP_KEY=umaChaveDeBootstrap
+ALLOWED_ORIGINS=http://localhost:3000
+RATE_LIMIT_WINDOW_MINUTES=15
+RATE_LIMIT_MAX=300
 
 # Admins automáticos
 ADMIN_AUTO_ADMINS=seu.email@dominio.com,outro.admin@dominio.com
@@ -74,6 +77,7 @@ EMAIL_FROM=fatecweek@exemplo.com
 PRESENCA_TOL_BEFORE_MINUTES=30
 PRESENCA_TOL_AFTER_MINUTES=30
 CERT_THRESHOLD_MINUTES=90
+FILE_ENCRYPTION_KEY=fraseSuperSecretaOpcional
 ```
 
 3) Execute em desenvolvimento
@@ -90,6 +94,8 @@ A aplicação sobe em `http://localhost:3000`.
 - `npm start` — inicia em modo normal
 - `npm run create-admin` — cria admin via script (interativo)
 - `npm run docs:pdf` — gera PDFs (documentação/certificados auxiliares)
+- `npm run crypto:demo "texto"` — demonstra criptografia AES (usa `FILE_ENCRYPTION_KEY` para cifrar/decifrar o texto informado)
+- `docker compose up --build` — sobe o app e o MongoDB localmente em containers (usa variáveis definidas no `.env` para `SESSION_SECRET`, `ADMIN_BOOTSTRAP_KEY`, etc.)
 
 ## Páginas (public/)
 
@@ -146,11 +152,25 @@ A aplicação sobe em `http://localhost:3000`.
 - Presença
   - Janela de tolerância: antes do início e após o fim (default: 30/30 min)
   - Certificado: se permanência ≥ `CERT_THRESHOLD_MINUTES` (default 90 min)
+    - Quando `FILE_ENCRYPTION_KEY` estiver definida, cada certificado em PDF também gera uma cópia criptografada (`.enc`) usando AES-256-CBC para armazenamento seguro.
   - Modos: GPS (verifica perímetro) e QR (válido dentro da janela)
 
 - QR Code
   - O QR aponta para `/qr.html?p=:id` e direciona o fluxo de presença
   - Template de impressão com mensagem "Seja bem-vindo(a)" e palestrante
+
+## Arquitetura segura
+
+- `helmet` aplica cabeçalhos seguros por padrão (XSS, MIME sniffing, etc.).
+- O CORS é restrito aos domínios definidos em `ALLOWED_ORIGINS` (pode ser múltiplos separados por vírgula).
+- Rate limiting global em `/api/*` (defaults: 15 min / 300 req) configurável por `RATE_LIMIT_WINDOW_MINUTES` e `RATE_LIMIT_MAX`.
+- `configureSecurity()` diferencia dev/prod para TLS (`NODE_TLS_REJECT_UNAUTHORIZED`).
+
+## Containers e deploy gratuito
+
+- O backend possui `Dockerfile` baseado em `node:18-slim`. Basta rodar `docker build -t fatecweek .` ou usar o `docker compose` para levantar app + Mongo.
+- Para demo local completa, use `docker compose up --build`; o serviço `app` já depende do `mongo` e herda variáveis de ambiente.
+- Para hospedar em serviços gratuitos (Railway, Render, etc.), a opção mais simples é apontar diretamente para o repositório ou para a imagem gerada via `Dockerfile`. Depois, configure as variáveis no painel (PORT, SESSION_SECRET, MONGO_URI apontando para o banco externo/Atlas).
 
 ## Bootstrap de administrador
 

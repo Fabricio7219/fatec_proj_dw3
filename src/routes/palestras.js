@@ -210,6 +210,14 @@ router.put('/:id', async (req, res) => {
         const palestra = await Palestra.findByIdAndUpdate(req.params.id, payload, { new: true });
         if (!palestra) return res.status(404).json({ sucesso: false, erro: 'Palestra não encontrada' });
 
+        // Regenera o QR Code com o host atual (útil se mudou de localhost para IP)
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const scanUrl = `${baseUrl}/qr.html?p=${palestra._id}`;
+        const qrCodeUrl = await qr.toDataURL(scanUrl);
+        palestra.qr_code = qrCodeUrl;
+        palestra.qr_url = scanUrl;
+        await palestra.save();
+
         res.json({ sucesso: true, mensagem: 'Palestra atualizada', dados: palestra });
     } catch (error) {
         res.status(500).json({ sucesso: false, erro: error.message });

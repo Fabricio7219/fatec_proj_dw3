@@ -14,11 +14,9 @@
     <p>Olá! Antes de continuar, precisamos de algumas informações.</p>
 
     <form id="formPerfil">
-      <!-- Campos ocultos preenchidos pelo login -->
       <input type="hidden" id="email" name="email">
       <input type="hidden" id="nome" name="nome">
 
-      <!-- Escolha do tipo (Aluno ou Docente) -->
       <div class="form-group">
         <label>Tipo</label>
         <div>
@@ -27,7 +25,6 @@
         </div>
       </div>
 
-      <!-- Campos do aluno (RA e semestre) -->
       <div id="camposAluno" style="display:none;">
         <div class="form-group">
           <label for="ra">RA</label>
@@ -55,169 +52,29 @@
           <option value="Fatec Barueri">Fatec Barueri</option>
           <option value="Fatec Carapicuíba">Fatec Carapicuíba</option>
           <option value="Fatec Cotia">Fatec Cotia</option>
-          <option value="Fatec Zona Leste">Fatec Zona Leste</option>
-          <option value="Fatec Itaquera">Fatec Itaquera</option>
-          <option value="Outra">Outra</option>
         </select>
       </div>
 
       <div class="form-group">
         <label for="curso">Curso</label>
         <select id="curso" name="curso">
-          <option value="Automação Industrial">Automação Industrial</option>
-          <option value="Desenvolvimento de Software Multiplataforma">Desenvolvimento de Software Multiplataforma</option>
-          <option value="Gestão Empresarial (EaD)">Gestão Empresarial (EaD)</option>
-          <option value="Gestão Financeira">Gestão Financeira</option>
-          <option value="Manutenção Industrial">Manutenção Industrial</option>
-          <option value="Redes de Computadores">Redes de Computadores</option>
-          <option value="Sistemas Biomédicos">Sistemas Biomédicos</option>
+          <option value="">Selecione seu curso</option>
+          <option value="ads">Análise e Desenvolvimento de Sistemas</option>
+          <option value="dsm">Desenvolvimento de Software Multiplataforma</option>
+          <option value="si">Sistemas para Internet</option>
+          <option value="bd">Banco de Dados</option>
+          <option value="jogos">Jogos Digitais</option>
+          <option value="redes">Redes de Computadores</option>
+          <option value="si-gestao">Sistemas de Informação - Gestão</option>
+          <option value="outro">Outro</option>
         </select>
       </div>
 
-      <button type="submit" class="btn">Salvar e Continuar</button>
+      <button type="submit" class="btn">Salvar Perfil</button>
     </form>
   </div>
 
-  <script>
-    const form = document.getElementById('formPerfil');
-    const camposAluno = document.getElementById('camposAluno');
-    const tipoAluno = document.getElementById('tipoAluno');
-    const tipoDocente = document.getElementById('tipoDocente');
-
-    // Mostra/oculta campos de aluno
-    function updateCampos() {
-      const tipo = document.querySelector('input[name="tipo"]:checked');
-      if (tipo && tipo.value === 'aluno') {
-        camposAluno.style.display = 'block';
-      } else {
-        camposAluno.style.display = 'none';
-      }
-    }
-
-    tipoAluno.addEventListener('change', updateCampos);
-    tipoDocente.addEventListener('change', updateCampos);
-
-    window.addEventListener('load', async () => {
-      // Tenta obter dados do login
-      try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
-        if (res.status === 200) {
-          const user = await res.json();
-          // Se já está cadastrado, redireciona
-          if (user.cadastroCompleto) {
-            if (user.tipo === 'admin') {
-              window.location.href = '/admin.html';
-              return;
-            }
-            window.location.href = user.tipo === 'docente' ? '/dashboard-docente.html' : '/dashboard-aluno.html';
-            return;
-          }
-
-              // Preenche email/nome
-              const emailField = document.getElementById('email');
-              const nomeField = document.getElementById('nome');
-              emailField.value = user.email || localStorage.getItem('email') || '';
-              nomeField.value = user.nome || user.displayName || localStorage.getItem('nome') || '';
-
-              // Se o servidor já sabe o tipo, pré-seleciona; caso contrário, seleciona Aluno por padrão
-              try {
-                if (user.tipo === 'admin') {
-                  // Admin não precisa completar perfil
-                  window.location.href = '/admin.html';
-                  return;
-                } else if (user.tipo === 'docente') {
-                  document.getElementById('tipoDocente').checked = true;
-                } else if (user.tipo === 'aluno') {
-                  document.getElementById('tipoAluno').checked = true;
-                } else {
-                  // Default para evitar erros de 'campo obrigatório'
-                  document.getElementById('tipoAluno').checked = true;
-                }
-                updateCampos();
-              } catch (e) {
-                console.warn('Não foi possível pré-selecionar tipo:', e);
-              }
-        } else {
-        // Sem sessão, tenta preencher a partir do localStorage e marca Aluno por padrão
-          document.getElementById('email').value = localStorage.getItem('email') || '';
-          document.getElementById('nome').value = localStorage.getItem('nome') || '';
-          try { document.getElementById('tipoAluno').checked = true; updateCampos(); } catch(e){}
-        }
-      } catch (err) {
-        console.error('Erro ao carregar dados do usuário:', err);
-  document.getElementById('email').value = localStorage.getItem('email') || '';
-  document.getElementById('nome').value = localStorage.getItem('nome') || '';
-  try { document.getElementById('tipoAluno').checked = true; updateCampos(); } catch(e){}
-      }
-    });
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const formData = new FormData(form);
-      const tipo = formData.get('tipo');
-
-      if (!tipo) {
-        alert('Escolha se você é Aluno ou Docente');
-        return;
-      }
-
-      // Garante que email/nome estão preenchidos: se não houver, busca /api/auth/me
-      let emailVal = formData.get('email');
-      let nomeVal = formData.get('nome');
-      if ((!emailVal || !nomeVal)) {
-        try {
-          const me = await fetch('/api/auth/me', { credentials: 'include' });
-          if (me.ok) {
-            const u = await me.json();
-            emailVal = emailVal || u.email || '';
-            nomeVal = nomeVal || u.nome || u.displayName || '';
-          }
-        } catch (err) {
-          console.warn('Não foi possível obter /api/auth/me antes do submit:', err);
-        }
-      }
-
-      const payload = {
-        email: emailVal,
-        nome: nomeVal,
-        tipo,
-        fatec: formData.get('fatec') || undefined,
-        curso: formData.get('curso') || undefined
-      };
-
-      if (tipo === 'aluno') {
-        payload.ra = formData.get('ra');
-        payload.semestre = formData.get('semestre');
-        if (!payload.ra || !payload.semestre) {
-          alert('RA e semestre são obrigatórios para alunos');
-          return;
-        }
-      }
-      // Para docente, não exigir RA/semestre/curso; backend já trata defaults
-
-      try {
-        const resp = await fetch('/api/auth/completar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(payload)
-        });
-
-        const data = await resp.json();
-        if (!resp.ok) {
-          alert(data.erro || data.mensagem || 'Erro ao salvar perfil');
-          return;
-        }
-
-        alert(data.mensagem || 'Perfil salvo com sucesso');
-        window.location.href = tipo === 'docente' ? '/dashboard-docente.html' : '/dashboard-aluno.html';
-      } catch (err) {
-        console.error('Erro ao salvar perfil:', err);
-        alert('Erro ao salvar perfil. Tente novamente.');
-      }
-    });
-  </script>
+  <script src="js/completar-perfil.js" defer></script>
 </body>
 
 </html>

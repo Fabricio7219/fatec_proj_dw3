@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Aluno - FatecWeek 2025</title>
     <link rel="stylesheet" href="style-dashboard.css">
+    <link rel="shortcut icon" href="img/logo-fatecweek.svg" type="image/x-icon">
 </head>
 <body>
     <header class="header">
         <div class="header-content">
-            <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
+            <img src="img/logo_fatec.png" alt="Logo FatecWeek" class="logo-principal">
             <div class="user-header">
-                <span class="user-name" id="userHeaderName">🎓 RA: <span id="userRA">---</span> - <span id="userNome">---</span></span>
-                <a href="#" class="btn-sair" onclick="logoutUsuario(event)">Sair</a>
+                <span class="user-name" id="userHeaderName">🎓 <span id="userNome">Aluno</span> | RA: <span id="userRA">---</span></span>
+                <button type="button" id="btnLogout" class="btn-sair">Sair</button>
             </div>
         </div>
     </header>
@@ -98,7 +99,7 @@
                     </div>
                     
                     <div class="stat-card card">
-                        <div class="stat-icon">�</div>
+                        <div class="stat-icon">🏆</div>
                         <div class="stat-info">
                             <h3 id="pontosTotal">0</h3>
                             <p>Pontos</p>
@@ -106,11 +107,19 @@
                     </div>
                     
                     <div class="stat-card card">
-                        <div class="stat-icon">�🎯</div>
+                        <div class="stat-icon">🎯</div>
                         <div class="stat-info">
                             <h3 id="progressoCertificado">0%</h3>
                             <p>Progresso</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Meus Certificados -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <h2>📜 Meus Certificados</h2>
+                    <div id="listaCertificados" class="palestras-grid" style="margin-top: 15px;">
+                        <p style="grid-column: 1/-1; text-align: center; color: #666;">Carregando certificados...</p>
                     </div>
                 </div>
 
@@ -136,7 +145,7 @@
     <!-- Popup de Boas-Vindas com Notícias -->
     <div id="popupNoticias" class="popup-overlay">
         <div class="popup-content">
-            <button class="popup-close" onclick="fecharPopup()">×</button>
+            <button class="popup-close">×</button>
             
             <div class="popup-header">
                 <h2>🎉 Bem-vindo ao FatecWeek 2025!</h2>
@@ -177,713 +186,27 @@
 
             <div class="popup-footer">
                 <label class="checkbox-nao-mostrar">
-                    <input type="checkbox" id="naoMostrarNovamente" onchange="salvarPreferencia()">
+                    <input type="checkbox" id="naoMostrarNovamente">
                     Não mostrar novamente hoje
                 </label>
-                <button class="btn-fechar-popup" onclick="fecharPopup()">Entendi</button>
+                <button class="btn-fechar-popup">Entendi</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Inscrição -->
+    <!-- Modal de Inscrição (Mantido para compatibilidade visual, mas fluxo principal é direto) -->
     <div id="modalInscricao" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>📝 Formulário de Inscrição</h2>
-                <span class="modal-close" onclick="fecharModal()">&times;</span>
+                <span class="modal-close">&times;</span>
             </div>
-            
             <div class="modal-body">
-                <div class="palestra-selecionada">
-                    <h3 id="palestraSelecionadaTitulo"></h3>
-                    <p id="palestraSelecionadaInfo"></p>
-                </div>
-
-                <form id="formInscricao" onsubmit="confirmarInscricao(event)">
-                    <!-- Dados do Google/Microsoft (preenchidos automaticamente) -->
-                    <div class="form-section">
-                        <h4>📋 Dados Pessoais (via Google)</h4>
-                        <div class="form-group-readonly">
-                            <label>Nome Completo:</label>
-                            <input type="text" id="nomeCompleto" value="Nome do Aluno" readonly>
-                        </div>
-                        <div class="form-group-readonly">
-                            <label>E-mail Institucional:</label>
-                            <input type="email" id="emailInstitucional" value="aluno@fatec.sp.gov.br" readonly>
-                        </div>
-                    </div>
-
-                    <!-- Dados adicionais -->
-                    <div class="form-section">
-                        <h4>✏️ Dados Adicionais</h4>
-                        
-                        <div class="form-group">
-                            <label for="ra">RA (Registro Acadêmico) *</label>
-                            <input type="text" id="ra" name="ra" required 
-                                   placeholder="Digite seu RA (somente números)"
-                                   pattern="[0-9]+" 
-                                   maxlength="10"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                            <small>Exemplo: 123456</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="fatec">FATEC *</label>
-                            <select id="fatec" name="fatec" required>
-                                <option value="">Selecione sua FATEC</option>
-                                <option value="fatec-osasco">FATEC Osasco - Prefeito Hirant Sanazar</option>
-                                <option value="fatec-sp">FATEC São Paulo</option>
-                                <option value="fatec-zona-leste">FATEC Zona Leste</option>
-                                <option value="fatec-zona-sul">FATEC Zona Sul</option>
-                                <option value="fatec-ipiranga">FATEC Ipiranga</option>
-                                <option value="fatec-guarulhos">FATEC Guarulhos</option>
-                                <option value="fatec-carapicuiba">FATEC Carapicuíba</option>
-                                <option value="fatec-tatuape">FATEC Tatuapé</option>
-                                <option value="fatec-santo-andre">FATEC Santo André</option>
-                                <option value="fatec-maua">FATEC Mauá</option>
-                                <option value="fatec-sao-caetano">FATEC São Caetano do Sul</option>
-                                <option value="fatec-diadema">FATEC Diadema</option>
-                                <option value="outra">Outra FATEC</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" id="outraFatecGroup" style="display: none;">
-                            <label for="outraFatec">Qual FATEC?</label>
-                            <input type="text" id="outraFatec" name="outraFatec" placeholder="Digite o nome da sua FATEC">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="curso">Curso *</label>
-                            <select id="curso" name="curso" required>
-                                <option value="">Selecione seu curso</option>
-                                <option value="ads">Análise e Desenvolvimento de Sistemas</option>
-                                <option value="dsm">Desenvolvimento de Software Multiplataforma</option>
-                                <option value="si">Sistemas para Internet</option>
-                                <option value="bd">Banco de Dados</option>
-                                <option value="jogos">Jogos Digitais</option>
-                                <option value="redes">Redes de Computadores</option>
-                                <option value="si-gestao">Sistemas de Informação - Gestão</option>
-                                <option value="outro">Outro</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="periodo">Período *</label>
-                            <select id="periodo" name="periodo" required>
-                                <option value="">Selecione o período</option>
-                                <option value="1">1º Semestre</option>
-                                <option value="2">2º Semestre</option>
-                                <option value="3">3º Semestre</option>
-                                <option value="4">4º Semestre</option>
-                                <option value="5">5º Semestre</option>
-                                <option value="6">6º Semestre</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="telefone">Telefone/WhatsApp</label>
-                            <input type="tel" id="telefone" name="telefone" 
-                                   placeholder="(11) 98765-4321"
-                                   oninput="formatarTelefone(this)">
-                            <small>Opcional - Para contato em caso de alterações</small>
-                        </div>
-                    </div>
-
-                    <!-- Confirmação -->
-                    <div class="form-section">
-                        <h4>✅ Confirmação</h4>
-                        
-                        <div class="form-group-checkbox">
-                            <input type="checkbox" id="confirmacaoPalestra" required>
-                            <label for="confirmacaoPalestra">
-                                Confirmo que pretendo participar da palestra selecionada e estou ciente de que a presença será registrada via QR Code
-                            </label>
-                        </div>
-
-                        <div class="form-group-checkbox">
-                            <input type="checkbox" id="termosUso" required>
-                            <label for="termosUso">
-                                Li e concordo com os termos de uso e política de privacidade do evento
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn-cancelar-modal" onclick="fecharModal()">Cancelar</button>
-                        <button type="submit" class="btn-confirmar-inscricao">✓ Confirmar Inscrição</button>
-                    </div>
-                </form>
+                <p>Processando inscrição...</p>
             </div>
         </div>
     </div>
 
-    <script>
-        function logoutUsuario(event) {
-            event.preventDefault();
-            fetch('/api/auth/logout', {
-                method: 'POST',
-                credentials: 'include'
-            })
-            .then(() => {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = 'index.html';
-            })
-            .catch(() => {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = 'index.html';
-            });
-        }
-
-    const palestrasInscritas = new Set();
-        let horasPorPalestra = {};
-        let palestrasNomes = {};
-        let palestrasHorarios = {};
-    let usuarioAtual = null;
-
-        function formatDateTime(dateStr, duracaoMin) {
-            try {
-                const d = new Date(dateStr);
-                const date = d.toLocaleDateString();
-                const start = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const endDate = new Date(d.getTime() + (duracaoMin || 60) * 60000);
-                const end = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                return `${date} - ${start} às ${end}`;
-            } catch (e) {
-                return 'Data/horário a confirmar';
-            }
-        }
-
-        // Carrega palestras do backend e renderiza a lista dinamicamente
-        async function carregarPalestras() {
-            const container = document.getElementById('palestrasLista');
-            container.innerHTML = '<p>Carregando palestras...</p>';
-            try {
-                const resp = await fetch('/api/palestras');
-                if (!resp.ok) throw new Error('Erro ao buscar palestras');
-                const json = await resp.json();
-                const list = json.dados || json;
-
-                // Reset
-                horasPorPalestra = {};
-                palestrasNomes = {};
-                palestrasHorarios = {};
-
-                if (!Array.isArray(list) || list.length === 0) {
-                    container.innerHTML = '<p>Nenhuma palestra disponível no momento.</p>';
-                    return;
-                }
-
-                container.innerHTML = '';
-
-                list.forEach((p, index) => {
-                    const id = String(p._id || p.id || (index+1));
-                    palestrasNomes[id] = p.titulo || `Palestra ${index+1}`;
-                    palestrasHorarios[id] = formatDateTime(p.data, p.duracao_minutos);
-                    horasPorPalestra[id] = (p.duracao_minutos || 60) / 60;
-
-                    const item = document.createElement('div');
-                    item.className = 'palestra-item';
-
-                    item.innerHTML = `
-                        <div class="palestra-badge">🎤</div>
-                        <div class="palestra-info-completa">
-                            <h3>${p.titulo}</h3>
-                            <div class="palestra-detalhes">
-                                <span class="detalhe"><strong>📅 Data:</strong> ${new Date(p.data).toLocaleDateString()}</span>
-                                <span class="detalhe"><strong>⏰ Horário:</strong> ${palestrasHorarios[id]}</span>
-                                <span class="detalhe"><strong>📍 Local:</strong> ${p.local || 'Não informado'}</span>
-                                <span class="detalhe"><strong>👨‍🏫 Palestrante:</strong> ${p.palestrante || 'A definir'}</span>
-                                <span class="detalhe"><strong>🏅 Pontos:</strong> ${typeof p.pontos === 'number' ? p.pontos : 0}</span>
-                            </div>
-                            <p class="palestra-descricao">${p.descricao || ''}</p>
-                        </div>
-                        <button class="btn-inscrever" onclick="abrirFormularioInscricao('${id}', this)">Inscrever-se</button>
-                    `;
-
-                    // Mostra um mini-resumo do aluno ao lado do botão (se logado)
-                    try {
-                        if (usuarioAtual && (usuarioAtual.nome || usuarioAtual.ra || usuarioAtual.curso)) {
-                            const mini = document.createElement('div');
-                            mini.className = 'aluno-mini';
-                            const cursoTxt = usuarioAtual.curso ? `, Curso: ${usuarioAtual.curso}` : '';
-                            const raTxt = usuarioAtual.ra ? `RA: ${usuarioAtual.ra}` : '';
-                            mini.style.fontSize = '0.85rem';
-                            mini.style.color = '#666';
-                            mini.style.marginTop = '6px';
-                            mini.textContent = `${usuarioAtual.nome || ''} ${raTxt ? '— ' + raTxt : ''}${cursoTxt}`;
-                            item.appendChild(mini);
-                        }
-                    } catch(e) {}
-
-                    container.appendChild(item);
-                });
-
-            } catch (err) {
-                console.error('Erro ao carregar palestras:', err);
-                container.innerHTML = '<p>Erro ao carregar palestras. Tente novamente mais tarde.</p>';
-            }
-        }
-
-        let palestraAtual = null;
-        let botaoAtual = null;
-
-        // Verificar e mostrar popup ao carregar a página
-        window.onload = function() {
-            verificarPopup();
-        };
-
-        function verificarPopup() {
-            const hoje = new Date().toDateString();
-            const ultimaVisualizacao = localStorage.getItem('popupNoticiasData');
-            const naoMostrar = localStorage.getItem('popupNoticiasNaoMostrar');
-            
-            // Se nunca viu ou se passou 1 dia
-            if (!ultimaVisualizacao || ultimaVisualizacao !== hoje || naoMostrar !== 'true') {
-                setTimeout(() => {
-                    document.getElementById('popupNoticias').style.display = 'flex';
-                }, 500); // Atraso de 0.5s para melhor UX
-            }
-        }
-
-        function fecharPopup() {
-            document.getElementById('popupNoticias').style.display = 'none';
-            const hoje = new Date().toDateString();
-            localStorage.setItem('popupNoticiasData', hoje);
-        }
-
-        function salvarPreferencia() {
-            const checkbox = document.getElementById('naoMostrarNovamente');
-            if (checkbox.checked) {
-                localStorage.setItem('popupNoticiasNaoMostrar', 'true');
-            } else {
-                localStorage.removeItem('popupNoticiasNaoMostrar');
-            }
-        }
-
-        // Fechar popup ao clicar fora
-        document.addEventListener('click', function(event) {
-            const popup = document.getElementById('popupNoticias');
-            if (event.target === popup) {
-                fecharPopup();
-            }
-        });
-
-        async function carregarUsuarioAtual(force=false){
-            if (usuarioAtual && !force) return usuarioAtual;
-            try{
-                const res = await fetch('/api/auth/me', { credentials: 'include' });
-                if (res.status === 401) throw new Error('unauthorized');
-                usuarioAtual = await res.json();
-                // Atualiza pontos no UI se disponível
-                try {
-                    const pontos = (typeof usuarioAtual.pontos_total === 'number') ? usuarioAtual.pontos_total : 0;
-                    const pontosEl = document.getElementById('pontosTotal');
-                    if (pontosEl) pontosEl.textContent = String(pontos);
-                } catch(e) {}
-                return usuarioAtual;
-            }catch(e){
-                // redireciona para login Google e volta ao dashboard
-                const back = encodeURIComponent('/dashboard-aluno.html');
-                window.location.href = '/api/auth/google?returnTo=' + back;
-                throw e;
-            }
-        }
-
-        function mapCursoToOptionValue(cursoStr){
-            if (!cursoStr) return '';
-            const s = String(cursoStr).toLowerCase();
-            if (s.includes('desenvolvimento de software') || s.includes('dsm')) return 'dsm';
-            if (s.includes('análise') || s.includes('analise') || s.includes('ads')) return 'ads';
-            if (s.includes('sistemas para internet') || s === 'si' || s.includes('internet')) return 'si';
-            if (s.includes('banco de dados') || s.includes('bd')) return 'bd';
-            if (s.includes('jogo')) return 'jogos';
-            if (s.includes('rede')) return 'redes';
-            if (s.includes('gest')) return 'si-gestao';
-            return 'outro';
-        }
-
-        // Abrir formulário de inscrição
-        async function abrirFormularioInscricao(id, btn) {
-            // Se já estiver inscrito, cancelar
-            if (palestrasInscritas.has(id)) {
-                if (confirm('Você já está inscrito nesta palestra. Deseja cancelar a inscrição?')) {
-                    cancelarInscricao(id);
-                }
-                return;
-            }
-
-            palestraAtual = id;
-            botaoAtual = btn;
-
-            // Preencher informações da palestra no modal
-            document.getElementById('palestraSelecionadaTitulo').textContent = palestrasNomes[id];
-            document.getElementById('palestraSelecionadaInfo').textContent = palestrasHorarios[id];
-
-            // Carrega dados reais do aluno e preenche automaticamente
-            try{
-                await carregarUsuarioAtual();
-                // Inscrição direta sem formulário: um clique e confirma
-                await inscreverDireto(id, btn);
-                return; // não abre modal no fluxo direto
-
-                // Abaixo: fallback — manter modal (desativado por return acima)
-                const nomeEl = document.getElementById('nomeCompleto');
-                const emailEl = document.getElementById('emailInstitucional');
-                const raEl = document.getElementById('ra');
-                const fatecEl = document.getElementById('fatec');
-                const cursoEl = document.getElementById('curso');
-                const periodoEl = document.getElementById('periodo');
-
-                // Nome e Email readonly
-                nomeEl.value = usuarioAtual.nome || usuarioAtual.displayName || '';
-                emailEl.value = usuarioAtual.email || '';
-                nomeEl.readOnly = true;
-                emailEl.readOnly = true;
-
-                // RA
-                if (usuarioAtual.ra) {
-                    raEl.value = usuarioAtual.ra;
-                    raEl.readOnly = true;
-                } else {
-                    raEl.value = '';
-                    raEl.readOnly = false;
-                }
-
-                // Curso
-                const v = mapCursoToOptionValue(usuarioAtual.curso);
-                if (v) {
-                    cursoEl.value = v;
-                    cursoEl.disabled = true;
-                } else {
-                    cursoEl.disabled = false;
-                }
-
-                // Período (semestre)
-                if (usuarioAtual.semestre) {
-                    periodoEl.value = String(usuarioAtual.semestre);
-                    periodoEl.disabled = true;
-                } else {
-                    periodoEl.disabled = false;
-                }
-
-                // FATEC
-                if (usuarioAtual.fatec) {
-                    // tenta escolher uma opção compatível, senão deixa selecionável
-                    const opt = Array.from(fatecEl.options).find(o => usuarioAtual.fatec.toLowerCase().includes(o.text.toLowerCase()) || usuarioAtual.fatec.toLowerCase().includes(o.value.toLowerCase()));
-                    if (opt) fatecEl.value = opt.value;
-                    fatecEl.disabled = !!opt;
-                } else {
-                    // define uma sugestão padrão
-                    fatecEl.value = fatecEl.value || 'fatec-osasco';
-                    fatecEl.disabled = false;
-                }
-
-                // Campos adicionais não devem travar a inscrição
-                raEl.required = false;
-                cursoEl.required = false;
-                periodoEl.required = false;
-                fatecEl.required = false;
-            } catch(e){
-                // Em caso de erro, mantém formulário aberto com mínimos
-            }
-
-            // Abrir modal (fallback)
-            document.getElementById('modalInscricao').style.display = 'flex';
-        }
-
-        // Fechar modal
-        function fecharModal() {
-            document.getElementById('modalInscricao').style.display = 'none';
-            palestraAtual = null;
-            botaoAtual = null;
-        }
-
-        // Fechar modal ao clicar fora
-        window.onclick = function(event) {
-            const modal = document.getElementById('modalInscricao');
-            if (event.target === modal) {
-                fecharModal();
-            }
-        }
-
-        // Mostrar/ocultar campo "Outra FATEC"
-        document.getElementById('fatec').addEventListener('change', function() {
-            const outraFatecGroup = document.getElementById('outraFatecGroup');
-            const outraFatecInput = document.getElementById('outraFatec');
-            
-            if (this.value === 'outra') {
-                outraFatecGroup.style.display = 'block';
-                outraFatecInput.required = true;
-            } else {
-                outraFatecGroup.style.display = 'none';
-                outraFatecInput.required = false;
-            }
-        });
-
-        // Formatar telefone
-        function formatarTelefone(input) {
-            let valor = input.value.replace(/\D/g, '');
-            
-            if (valor.length <= 10) {
-                valor = valor.replace(/(\d{2})(\d)/, '($1) $2');
-                valor = valor.replace(/(\d{4})(\d)/, '$1-$2');
-            } else {
-                valor = valor.replace(/(\d{2})(\d)/, '($1) $2');
-                valor = valor.replace(/(\d{5})(\d)/, '$1-$2');
-            }
-            
-            input.value = valor;
-        }
-
-        // Mapa de inscrições: palestraId -> inscricaoId
-        const inscricoesMap = {};
-
-        // Confirmar inscrição — envia ao backend e atualiza UI
-        async function confirmarInscricao(event) {
-            event.preventDefault();
-
-            if (!palestraAtual) return;
-
-            // Coletar dados mínimos
-            const payload = { palestraId: String(palestraAtual) };
-
-            try {
-                const resp = await fetch('/api/inscricoes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify(payload)
-                });
-
-                if (!resp.ok) {
-                    const err = await resp.json().catch(() => ({}));
-                    alert(err.erro || err.message || 'Erro ao criar inscrição');
-                    return;
-                }
-
-                const json = await resp.json();
-                // API retorna { mensagem, inscricao }
-                const inscricao = json.inscricao || json;
-                const inscricaoId = inscricao._id || inscricao.id;
-
-                // Marca localmente
-                inscricoesMap[String(palestraAtual)] = inscricaoId;
-                palestrasInscritas.add(palestraAtual);
-
-                // Atualizar botão
-                if (botaoAtual) {
-                    botaoAtual.textContent = '✓ Inscrito';
-                    botaoAtual.classList.add('inscrito');
-                }
-
-                // Atualizar interface
-                atualizarEstatisticas();
-                await carregarInscricoes();
-
-                // Fechar modal
-                fecharModal();
-
-                alert('✅ Inscrição realizada com sucesso!\n\nVocê receberá uma confirmação no e-mail cadastrado.');
-            } catch (err) {
-                console.error('Erro ao confirmar inscrição:', err);
-                alert('Erro de rede ao tentar inscrever. Tente novamente.');
-            }
-        }
-
-        async function inscreverDireto(id, btn){
-            const payload = { palestraId: String(id) };
-            try {
-                const resp = await fetch('/api/inscricoes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify(payload)
-                });
-                if (!resp.ok) {
-                    const err = await resp.json().catch(() => ({}));
-                    alert(err.erro || err.message || 'Erro ao criar inscrição');
-                    return;
-                }
-                const json = await resp.json();
-                const inscricao = json.inscricao || json;
-                const inscricaoId = inscricao._id || inscricao.id;
-                const pid = String(id);
-                inscricoesMap[pid] = inscricaoId;
-                palestrasInscritas.add(id);
-                if (btn) { btn.textContent = '✓ Inscrito'; btn.classList.add('inscrito'); }
-                atualizarEstatisticas();
-                await carregarInscricoes();
-                alert('✅ Inscrição realizada com sucesso!');
-            } catch (err) {
-                console.error('Erro ao inscrever diretamente:', err);
-                alert('Erro de rede ao tentar inscrever. Tente novamente.');
-            }
-        }
-
-        // Atualizar estatísticas
-        function atualizarEstatisticas() {
-            const total = palestrasInscritas.size;
-            document.getElementById('totalInscritas').textContent = total;
-            document.getElementById('totalComparecidas').textContent = '0';
-            
-            let horasTotal = 0;
-            palestrasInscritas.forEach(id => {
-                horasTotal += horasPorPalestra[id];
-            });
-            
-            document.getElementById('horasCertificado').textContent = horasTotal.toFixed(1) + 'h';
-            
-            const progresso = Math.min((horasTotal / 20) * 100, 100);
-            document.getElementById('progressoCertificado').textContent = progresso.toFixed(0) + '%';
-        }
-
-        // Atualizar minhas inscrições
-        function atualizarMinhasInscricoes() {
-            const container = document.getElementById('minhasInscricoes');
-            const lista = document.getElementById('listaInscricoes');
-            
-            if (palestrasInscritas.size === 0) {
-                container.style.display = 'none';
-                return;
-            }
-            
-            container.style.display = 'block';
-            
-            lista.innerHTML = '';
-            palestrasInscritas.forEach(id => {
-                const div = document.createElement('div');
-                div.className = 'inscricao-item';
-                div.innerHTML = `
-                    <div class="inscricao-info">
-                        <h4>${palestrasNomes[id]}</h4>
-                        <p>📅 ${palestrasHorarios[id]} - ⏱️ ${horasPorPalestra[id]}h</p>
-                    </div>
-                    <button class="btn-cancelar" onclick="cancelarInscricao(${id})">Cancelar</button>
-                `;
-                lista.appendChild(div);
-            });
-        }
-
-        // Cancelar inscrição (persiste no backend quando possível)
-        async function cancelarInscricao(id) {
-            if (!confirm('Deseja realmente cancelar esta inscrição?')) return;
-
-            try {
-                const pid = String(id);
-                const inscricaoId = inscricoesMap[pid];
-
-                if (inscricaoId) {
-                    const resp = await fetch(`/api/inscricoes/${inscricaoId}`, {
-                        method: 'DELETE',
-                        credentials: 'include'
-                    });
-
-                    if (!resp.ok) {
-                        const err = await resp.json().catch(() => ({}));
-                        alert(err.erro || 'Erro ao cancelar inscrição');
-                        return;
-                    }
-
-                    // Remover do mapa
-                    delete inscricoesMap[pid];
-                } else {
-                    // fallback: apenas limpa localmente
-                    console.warn('Cancelando inscrição localmente (sem inscrição registrada no backend)');
-                }
-
-                palestrasInscritas.delete(id);
-
-                // Atualizar botão na lista de palestras — tenta encontrar pelo atributo onclick
-                const botoes = document.querySelectorAll('.btn-inscrever');
-                botoes.forEach(btn => {
-                    const onclick = btn.getAttribute('onclick') || '';
-                    const m = onclick.match(/abrirFormularioInscricao\(\s*['"]?([^'"\),]+)['"]?\s*,/);
-                    if (m && m[1] == id) {
-                        btn.textContent = 'Inscrever-se';
-                        btn.classList.remove('inscrito');
-                    }
-                });
-
-                await carregarInscricoes();
-                atualizarEstatisticas();
-                atualizarMinhasInscricoes();
-
-                alert('❌ Inscrição cancelada com sucesso!');
-            } catch (err) {
-                console.error('Erro ao cancelar inscrição:', err);
-                alert('Erro ao cancelar inscrição. Tente novamente.');
-            }
-        }
-
-        // Buscar dados do usuário logado
-        function preencherHeaderUsuario() {
-            fetch('/api/auth/me', { credentials: 'include' })
-                .then(res => res.json())
-                .then(data => {
-                    usuarioAtual = data;
-                    if (data && data.nome) {
-                        document.getElementById('userNome').textContent = data.nome;
-                        document.getElementById('userRA').textContent = data.ra || '---';
-                        try {
-                            const pontos = (typeof data.pontos_total === 'number') ? data.pontos_total : 0;
-                            const pontosEl = document.getElementById('pontosTotal');
-                            if (pontosEl) pontosEl.textContent = String(pontos);
-                        } catch(e) {}
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('userNome').textContent = 'Usuário';
-                    document.getElementById('userRA').textContent = '---';
-                });
-        }
-
-        // Carrega inscrições do backend, atualiza mapa e UI
-        async function carregarInscricoes() {
-            try {
-                const resp = await fetch('/api/inscricoes', { credentials: 'include' });
-                if (!resp.ok) return;
-                const json = await resp.json();
-                const lista = json.dados || json;
-
-                // Reset local
-                palestrasInscritas.clear();
-                for (const k in inscricoesMap) delete inscricoesMap[k];
-
-                lista.forEach(ins => {
-                    const pid = String(ins.palestraId);
-                    inscricoesMap[pid] = ins._id || ins.id;
-                    palestrasInscritas.add(pid);
-                });
-
-                // Atualiza botões
-                const botoes = document.querySelectorAll('.btn-inscrever');
-                botoes.forEach(btn => {
-                    const onclick = btn.getAttribute('onclick') || '';
-                    const m = onclick.match(/abrirFormularioInscricao\(\s*['"]?([^'"\),]+)['"]?\s*,/);
-                    if (m) {
-                        const pid = m[1];
-                        if (inscricoesMap[pid]) {
-                            btn.textContent = '✓ Inscrito';
-                            btn.classList.add('inscrito');
-                        } else {
-                            btn.textContent = 'Inscrever-se';
-                            btn.classList.remove('inscrito');
-                        }
-                    }
-                });
-
-                atualizarEstatisticas();
-                atualizarMinhasInscricoes();
-            } catch (err) {
-                console.error('Erro ao carregar inscrições:', err);
-            }
-        }
-
-    // Inicializa header, carrega palestras e inscrições (em ordem)
-    preencherHeaderUsuario();
-    carregarPalestras().then(() => carregarInscricoes());
-    </script>
+    <script src="js/dashboard-aluno.js"></script>
 </body>
 </html>

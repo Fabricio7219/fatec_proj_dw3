@@ -11,9 +11,21 @@ async function gpsStrategy({ localizacao, palestra }) {
   return { ok: !!dentro, motivo: dentro ? null : 'Fora do perímetro' };
 }
 
-async function qrStrategy({ qrData, palestra }) {
+async function qrStrategy({ qrData, palestra, localizacao }) {
   // qrData pode ser uma string com o conteúdo lido do QR
   if (!qrData || !palestra) return { ok: false, motivo: 'Dados insuficientes para QR' };
+
+  // Validação de Localização (Anti-Fraude)
+  // Se a palestra tem localização definida, exigimos que o usuário esteja perto, mesmo usando QR
+  if (palestra.localizacao && (palestra.localizacao.lat || palestra.localizacao.lng)) {
+      if (!localizacao || !localizacao.lat) {
+          return { ok: false, motivo: 'Localização é obrigatória para validar o QR Code (Anti-Fraude)' };
+      }
+      const dentro = verificarPerimetro(localizacao, palestra.localizacao);
+      if (!dentro) {
+          return { ok: false, motivo: 'QR Code válido, mas você está fora do local do evento.' };
+      }
+  }
 
   // Implementação simples: se o qrData contém o id da palestra ou o JSON com palestraId
   try {

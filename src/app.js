@@ -9,6 +9,8 @@ const express = require('express');
 const passport = require('passport');
 const session = require('express-session');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 require('./config/passportGoogle');
@@ -30,10 +32,42 @@ connectToDatabase();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
+// Permitir que Express reconheça IP real quando estiver atrás de proxy/reverso
+app.set('trust proxy', 1);
+
+app.use(helmet({ crossOriginResourcePolicy: false }));
+
+const parsedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  credentials: true,
+  origin(origin, callback) {
+    if (!parsedOrigins.length || !origin) {
+      return callback(null, true);
+    }
+    if (parsedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Origin não autorizado pelo CORS'));
+  }
+};
+
+app.use(cors(corsOptions));
+
+const rateLimitWindowMinutes = Number(process.env.RATE_LIMIT_WINDOW_MINUTES || 15);
+const rateLimitMax = Number(process.env.RATE_LIMIT_MAX || 300);
+
+const limiter = rateLimit({
+  windowMs: rateLimitWindowMinutes * 60 * 1000,
+  max: rateLimitMax,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+app.use('/api/', limiter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -86,4 +120,6 @@ app.get('/', (req, res) => {
 
 app.use((req, res) => res.status(404).json({ erro: 'Rota não encontrada' }));
 
-app.listen(PORT, () => console.log(`✅ Servidor rodando na porta ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Servidor rodando na porta ${PORT}`);
+});

@@ -8,7 +8,9 @@
     "dev": "nodemon src/app.js",
     "create-admin": "node src/scripts/create-admin.js",
     "drop-index": "node src/scripts/drop-ra-index.js",
-    "docs:pdf": "node src/scripts/generate-docs-pdf.js"
+    "docs:pdf": "node src/scripts/generate-docs-pdf.js",
+    "reconcile:participantes": "node src/scripts/reconcile-participantes.js",
+    "crypto:demo": "node src/scripts/demo-text-crypto.js"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +24,9 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
     "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
     "mongoose": "^8.18.1",
     "nodemailer": "^7.0.10",
     "passport": "^0.7.0",

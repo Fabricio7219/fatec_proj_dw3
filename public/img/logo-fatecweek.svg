@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" role="img" aria-labelledby="title desc">
+  <title id="title">FatecWeek</title>
+  <desc id="desc">Logotipo simples utilizado no painel do aluno</desc>
+  <rect width="320" height="80" rx="12" fill="#f5f6fb" stroke="#dfe4ea" />
+  <text x="32" y="50" font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-size="34" fill="#273c75">Fatec</text>
+  <text x="155" y="50" font-family="'Segoe UI', Arial, sans-serif" font-weight="600" font-size="34" fill="#ff4757">Week</text>
+  <circle cx="278" cy="40" r="18" fill="#0984e3" />
+  <path d="M278 30v20M268 40h20" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+</svg>

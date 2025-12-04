@@ -11,7 +11,7 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
+            <img src="img/logo_fatec.png" alt="Logo FatecWeek" class="logo-principal">
             <a href="index.html" class="btn-voltar">← Voltar</a>
         </div>
     </header>
@@ -19,8 +19,8 @@
     <main class="login-container">
         <div class="login-card">
             <div class="login-header login-header-aluno">
-                <h1>🎓 Login Aluno</h1>
-                <p>Acesse com sua conta Google</p>
+                <h1>🎓Login </h1>
+                   <p>Acesse com sua conta Google</p>
             </div>
 
             <div class="login-content">
@@ -28,7 +28,7 @@
 
                 <!-- 🔹 Botão de login via Google -->
                 <a href="http://localhost:3000/api/auth/google" class="btn-google">
-                    <img src="https://developers.google.com/identity/images/g-logo.png" class="google-icon" alt="">
+                    <img src="img/g-logo.png" class="google-icon" alt="">
                     Entrar com Google
                 </a>
 
@@ -67,48 +67,43 @@
     </footer>
 
     <script>
+        // Verifica se há returnTo na URL para ajustar o link do Google
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const returnTo = params.get('returnTo');
+            if (returnTo) {
+                const btnGoogle = document.querySelector('.btn-google');
+                if (btnGoogle) {
+                    // Adiciona o returnTo ao link de login
+                    const currentHref = btnGoogle.getAttribute('href');
+                    const separator = currentHref.includes('?') ? '&' : '?';
+                    btnGoogle.setAttribute('href', `${currentHref}${separator}returnTo=${encodeURIComponent(returnTo)}`);
+                }
+            }
+            checkLogin();
+        });
+
         async function checkLogin() {
             try {
-                console.log("Verificando login...");
-                const res = await fetch("http://localhost:3000/api/auth/me", { 
-                    credentials: "include",
-                    headers: {
-                        "Accept": "application/json"
-                    }
-                });
-
-                console.log("Status da resposta:", res.status);
+                const res = await fetch("http://localhost:3000/api/auth/me", { credentials: "include" });
 
                 if (res.status === 200) {
                     const user = await res.json();
-                    console.log("Dados do usuário:", user);
 
                     // 🔹 guarda dados para completar cadastro se necessário
                     localStorage.setItem("email", user.email);
                     localStorage.setItem("nome", user.nome);
 
-                    // ✅ Verifica se cadastro está completo
-                    if (user.cadastroCompleto) {
-                        if (user.tipo === "docente") {
-                            console.log("Redirecionando para dashboard docente...");
-                            return window.location.href = "dashboard-docente.html";
-                        } else {
-                            console.log("Redirecionando para dashboard aluno...");
-                            return window.location.href = "dashboard-aluno.html";
-                        }
-                    } else {
-                        console.log("Redirecionando para completar perfil...");
+                    // ✅ Se ainda não tem RA → manda completar cadastro
+                    if (!user.tipo || !user.ra) {
                         return window.location.href = "completar-perfil.html";
                     }
-                } else {
-                    console.log("Usuário não autenticado");
-                    document.querySelector('.btn-google').style.display = 'block';
-                    document.getElementById('userInfo').style.display = 'none';
+
+                    // ✅ Se já tem cadastro completo → mostra painel de info
+                    displayUserInfo(user);
                 }
             } catch (err) {
-                console.error("Erro ao verificar login:", err);
-                document.querySelector('.btn-google').style.display = 'block';
-                document.getElementById('userInfo').style.display = 'none';
+                console.log("Não logado:", err);
             }
         }
 
@@ -121,23 +116,9 @@
         }
 
         async function signOut() {
-            try {
-                await fetch("http://localhost:3000/api/auth/logout", { 
-                    method: "POST", 
-                    credentials: "include"
-                });
-                // Limpa todo o localStorage
-                localStorage.clear();
-                // Limpa qualquer cookie de sessão
-                document.cookie.split(";").forEach(c => {
-                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-                });
-                // Redireciona para a página inicial em vez de recarregar
-                window.location.href = "index.html";
-            } catch (err) {
-                console.error("Erro ao fazer logout:", err);
-                alert("Erro ao fazer logout. Tente novamente.");
-            }
+            await fetch("http://localhost:3000/api/auth/logout", { method: "POST", credentials: "include" });
+            localStorage.clear();
+            window.location.reload();
         }
 
         function continuarParaDashboard() {

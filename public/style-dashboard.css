@@ -254,9 +254,11 @@ body {
     background: #c41e3a;
     color: white;
     padding: 8px 20px;
+    border: none;
     border-radius: 6px;
     text-decoration: none;
     font-weight: bold;
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 

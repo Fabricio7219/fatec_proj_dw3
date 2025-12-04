@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Aluno - FatecWeek 2025</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <link rel="shortcut icon" href="img/logo_fatec.png" type="image/x-icon">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <img src="img/logo_fatec.png" alt="Logo FatecWeek" class="logo-principal">
+            <div class="user-header">
+                <span class="user-name" id="userHeaderName">🎓 <span id="userNome">Aluno</span> | RA: <span id="userRA">---</span></span>
+                <button type="button" id="btnLogout" class="btn-sair">Sair</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <div class="dashboard-layout">
+            <!-- Sidebar de Notícias -->
+            <aside class="noticias-sidebar">
+                <h3>📰 Avisos</h3>
+                
+                <a href="https://www.vestibularfatec.com.br/" target="_blank" class="noticia-mini">
+                    <div class="noticia-icone vestibulinho">🎓</div>
+                    <div>
+                        <strong>Vestibulinho</strong>
+                        <p>Inscrições abertas</p>
+                    </div>
+                </a>
+
+                <a href="https://forms.gle/exemplo" target="_blank" class="noticia-mini">
+                    <div class="noticia-icone questionario">📝</div>
+                    <div>
+                        <strong>Questionário</strong>
+                        <p>Avalie seu curso</p>
+                    </div>
+                </a>
+
+                <a href="https://www.cps.sp.gov.br/" target="_blank" class="noticia-mini">
+                    <div class="noticia-icone portal">🌐</div>
+                    <div>
+                        <strong>Portal CPS</strong>
+                        <p>Notas e frequência</p>
+                    </div>
+                </a>
+
+                <a href="https://www.fatec.sp.gov.br/" target="_blank" class="noticia-mini">
+                    <div class="noticia-icone biblioteca">📚</div>
+                    <div>
+                        <strong>Biblioteca</strong>
+                        <p>Acervo digital</p>
+                    </div>
+                </a>
+
+                <a href="https://forms.gle/exemplo2" target="_blank" class="noticia-mini">
+                    <div class="noticia-icone estagios">💼</div>
+                    <div>
+                        <strong>Estágios</strong>
+                        <p>Vagas disponíveis</p>
+                    </div>
+                </a>
+            </aside>
+
+            <!-- Conteúdo Principal -->
+            <div class="dashboard-content">
+                <div class="dashboard-header dashboard-header-aluno">
+                    <h1>Bem-vindo ao FatecWeek 2025!</h1>
+                    <p>Escolha as palestras que deseja participar</p>
+                </div>
+
+                <!-- Estatísticas do Aluno -->
+                <div class="stats-grid">
+                    <div class="stat-card card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-info">
+                            <h3 id="totalInscritas">0</h3>
+                            <p>Palestras Inscritas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <h3 id="totalComparecidas">0</h3>
+                            <p>Comparecidas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card card">
+                        <div class="stat-icon">⏰</div>
+                        <div class="stat-info">
+                            <h3 id="horasCertificado">0h</h3>
+                            <p>Horas de Certificado</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card card">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-info">
+                            <h3 id="pontosTotal">0</h3>
+                            <p>Pontos</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-info">
+                            <h3 id="progressoCertificado">0%</h3>
+                            <p>Progresso</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Palestras Disponíveis -->
+                <div class="palestras-disponiveis card">
+                    <h2>📚 Palestras Disponíveis</h2>
+                    <p class="subtitulo">Clique em "Inscrever-se" para participar das palestras</p>
+
+                    <div class="palestras-lista" id="palestrasLista">
+                        <p>Carregando palestras...</p>
+                    </div>
+                </div>
+
+                <!-- Minhas Inscrições -->
+                <div class="minhas-inscricoes card" id="minhasInscricoes" style="display: none;">
+                    <h2>✅ Minhas Inscrições</h2>
+                    <div id="listaInscricoes"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Popup de Boas-Vindas com Notícias -->
+    <div id="popupNoticias" class="popup-overlay">
+        <div class="popup-content">
+            <button class="popup-close" id="btnFecharPopupX">×</button>
+            
+            <div class="popup-header">
+                <h2>🎉 Bem-vindo ao FatecWeek 2025!</h2>
+                <p>Confira as novidades e avisos importantes</p>
+            </div>
+
+            <div class="popup-body">
+                <div class="popup-avisos">
+                    <div class="popup-aviso urgente">
+                        <span class="aviso-badge">🔴 Urgente</span>
+                        <h3>Vestibulinho FATEC 2025</h3>
+                        <p>Inscrições abertas até 15/11. Não perca o prazo!</p>
+                        <a href="https://www.vestibularfatec.com.br/" target="_blank">Inscrever-se →</a>
+                    </div>
+
+                    <div class="popup-aviso importante">
+                        <span class="aviso-badge">🟡 Importante</span>
+                        <h3>Questionário do Curso</h3>
+                        <p>Avalie seu curso e ajude a melhorar a qualidade do ensino.</p>
+                        <a href="https://forms.gle/exemplo" target="_blank">Preencher agora →</a>
+                    </div>
+
+                    <div class="popup-aviso info">
+                        <span class="aviso-badge">🔵 Info</span>
+                        <h3>Portal do Aluno Atualizado</h3>
+                        <p>Acesse suas notas e frequência no novo portal CPS.</p>
+                        <a href="https://www.cps.sp.gov.br/" target="_blank">Acessar portal →</a>
+                    </div>
+
+                    <div class="popup-aviso info">
+                        <span class="aviso-badge">💼 Vagas</span>
+                        <h3>Programa de Estágios</h3>
+                        <p>Novas vagas disponíveis para alunos da FATEC.</p>
+                        <a href="https://forms.gle/exemplo2" target="_blank">Ver vagas →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="popup-footer">
+                <label class="checkbox-nao-mostrar">
+                    <input type="checkbox" id="naoMostrarNovamente">
+                    Não mostrar novamente hoje
+                </label>
+                <button class="btn-fechar-popup" id="btnFecharPopupEntendi">Entendi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Inscrição (Mantido para compatibilidade visual, mas fluxo principal é direto) -->
+    <div id="modalInscricao" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📝 Formulário de Inscrição</h2>
+                <span class="modal-close" id="btnFecharModalX">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Processando inscrição...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuração da API ---
+        const API_BASE_URL = (function() {
+            const protocol = window.location.protocol;
+            const host = window.location.hostname;
+            const port = window.location.port;
+            
+            // Se estiver rodando em arquivo ou porta diferente de 3000, assume localhost:3000
+            if (protocol === 'file:' || (port && port !== '3000')) {
+                return 'http://localhost:3000';
+            }
+            return '';
+        })();
+
+        function buildApiUrl(path) {
+            if (/^https?:/.test(path)) return path;
+            const base = API_BASE_URL;
+            const cleanPath = path.startsWith('/') ? path : '/' + path;
+            return base + cleanPath;
+        }
+
+        async function apiFetch(path, options = {}) {
+            const url = buildApiUrl(path);
+            const defaultOptions = { credentials: 'include' };
+            const finalOptions = { ...defaultOptions, ...options };
+            return fetch(url, finalOptions);
+        }
+
+        // --- Estado Global ---
+        const state = {
+            usuario: null,
+            palestras: [],
+            inscricoes: new Set(),
+            inscricoesMap: {},
+            metaDadosPalestras: {}
+        };
+
+        // --- Funções de Utilidade ---
+        function formatarDataHora(dataIso, duracaoMinutos = 60) {
+            try {
+                const inicio = new Date(dataIso);
+                if (isNaN(inicio.getTime())) return 'Data a confirmar';
+                
+                const fim = new Date(inicio.getTime() + duracaoMinutos * 60000);
+                
+                const dia = inicio.toLocaleDateString('pt-BR');
+                const horaInicio = inicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const horaFim = fim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                
+                return `${dia} - ${horaInicio} às ${horaFim}`;
+            } catch (e) {
+                return 'Data a confirmar';
+            }
+        }
+
+        // --- Autenticação e Usuário ---
+        async function carregarUsuario() {
+            try {
+                const res = await apiFetch('/api/auth/me');
+                if (res.status === 401) {
+                    window.location.href = buildApiUrl('/api/auth/google?returnTo=' + encodeURIComponent(window.location.pathname));
+                    return;
+                }
+                if (!res.ok) throw new Error('Erro ao carregar usuário');
+                
+                state.usuario = await res.json();
+                atualizarHeaderUsuario();
+            } catch (error) {
+                console.error('Erro auth:', error);
+            }
+        }
+
+        function atualizarHeaderUsuario() {
+            if (!state.usuario) return;
+            
+            const nomeEl = document.getElementById('userNome');
+            const raEl = document.getElementById('userRA');
+            const pontosEl = document.getElementById('pontosTotal');
+
+            if (nomeEl) nomeEl.textContent = state.usuario.nome || state.usuario.displayName || 'Aluno';
+            if (raEl) raEl.textContent = state.usuario.ra || '---';
+            
+            const pontos = state.usuario.pontos_total || 0;
+            if (pontosEl) pontosEl.textContent = pontos;
+        }
+
+        async function logoutUsuario(e) {
+            if (e) e.preventDefault();
+            console.log('Iniciando logout...');
+            
+            const btn = document.getElementById('btnLogout');
+            if (btn) {
+                btn.textContent = 'Saindo...';
+                btn.disabled = true;
+            }
+
+            try {
+                // Tenta fazer logout via POST (padrão)
+                const res = await apiFetch('/api/auth/logout', { method: 'POST' });
+                
+                if (res.ok) {
+                    console.log('Logout POST realizado com sucesso');
+                    window.location.href = 'index.html';
+                } else {
+                    console.warn('Logout POST retornou erro, tentando fallback GET');
+                    window.location.href = buildApiUrl('/api/auth/logout');
+                }
+            } catch (error) {
+                console.error('Erro de rede ao tentar logout, forçando redirecionamento', error);
+                window.location.href = buildApiUrl('/api/auth/logout');
+            }
+        }
+
+        // --- Palestras ---
+        async function carregarPalestras() {
+            const container = document.getElementById('palestrasLista');
+            container.innerHTML = '<p>Carregando palestras...</p>';
+
+            try {
+                const res = await apiFetch('/api/palestras');
+                if (!res.ok) throw new Error('Falha ao buscar palestras');
+                
+                const dados = await res.json();
+                state.palestras = Array.isArray(dados) ? dados : (dados.dados || []);
+
+                renderizarPalestras();
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = '<p>Não foi possível carregar as palestras.</p>';
+            }
+        }
+
+        function renderizarPalestras() {
+            const container = document.getElementById('palestrasLista');
+            container.innerHTML = '';
+
+            if (state.palestras.length === 0) {
+                container.innerHTML = '<p>Nenhuma palestra disponível.</p>';
+                return;
+            }
+
+            state.palestras.forEach((p, index) => {
+                const id = String(p._id || p.id || index);
+                const duracao = p.duracao_minutos || 60;
+                const horarioFormatado = formatarDataHora(p.data, duracao);
+                
+                state.metaDadosPalestras[id] = {
+                    titulo: p.titulo,
+                    horario: horarioFormatado,
+                    duracaoHoras: duracao / 60
+                };
+
+                const div = document.createElement('div');
+                div.className = 'palestra-item';
+                div.innerHTML = `
+                    <div class="palestra-badge">🎤</div>
+                    <div class="palestra-info-completa">
+                        <h3>${p.titulo}</h3>
+                        <div class="palestra-detalhes">
+                            <span class="detalhe"><strong>📅 Data:</strong> ${new Date(p.data).toLocaleDateString()}</span>
+                            <span class="detalhe"><strong>⏰ Horário:</strong> ${horarioFormatado}</span>
+                            <span class="detalhe"><strong>📍 Local:</strong> ${p.local || 'A definir'}</span>
+                            <span class="detalhe"><strong>👨‍🏫 Palestrante:</strong> ${p.palestrante || 'A definir'}</span>
+                            <span class="detalhe"><strong>🏅 Pontos:</strong> ${p.pontos || 0}</span>
+                        </div>
+                        <p class="palestra-descricao">${p.descricao || ''}</p>
+                    </div>
+                    <button class="btn-inscrever" data-id="${id}">
+                        Inscrever-se
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+            
+            atualizarBotoesInscricao();
+        }
+
+        // --- Inscrições ---
+        async function carregarInscricoes() {
+            try {
+                const res = await apiFetch('/api/inscricoes');
+                if (!res.ok) return;
+                
+                const dados = await res.json();
+                const lista = Array.isArray(dados) ? dados : (dados.dados || []);
+
+                state.inscricoes.clear();
+                state.inscricoesMap = {};
+
+                lista.forEach(ins => {
+                    const pid = String(ins.palestraId);
+                    state.inscricoes.add(pid);
+                    state.inscricoesMap[pid] = ins._id || ins.id;
+                });
+
+                atualizarBotoesInscricao();
+                atualizarEstatisticas();
+                renderizarMinhasInscricoes();
+            } catch (error) {
+                console.error('Erro ao carregar inscrições:', error);
+            }
+        }
+
+        function atualizarBotoesInscricao() {
+            document.querySelectorAll('.btn-inscrever').forEach(btn => {
+                const id = btn.getAttribute('data-id');
+                if (state.inscricoes.has(id)) {
+                    btn.textContent = '✓ Inscrito';
+                    btn.classList.add('inscrito');
+                } else {
+                    btn.textContent = 'Inscrever-se';
+                    btn.classList.remove('inscrito');
+                }
+            });
+        }
+
+        async function handleInscricaoClick(id, btn) {
+            if (state.inscricoes.has(id)) {
+                if (confirm('Deseja cancelar sua inscrição nesta palestra?')) {
+                    await cancelarInscricao(id);
+                }
+            } else {
+                await realizarInscricao(id);
+            }
+        }
+
+        async function realizarInscricao(palestraId) {
+            try {
+                const res = await apiFetch('/api/inscricoes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ palestraId })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.erro || 'Erro ao realizar inscrição.');
+                    return;
+                }
+
+                const data = await res.json();
+                const inscricao = data.inscricao || data;
+                
+                state.inscricoes.add(palestraId);
+                state.inscricoesMap[palestraId] = inscricao._id || inscricao.id;
+                
+                atualizarBotoesInscricao();
+                atualizarEstatisticas();
+                renderizarMinhasInscricoes();
+                
+                alert('✅ Inscrição realizada com sucesso!');
+            } catch (error) {
+                console.error(error);
+                alert('Erro de conexão ao tentar inscrever.');
+            }
+        }
+
+        async function cancelarInscricao(palestraId) {
+            const inscricaoId = state.inscricoesMap[palestraId];
+            if (!inscricaoId) return;
+
+            try {
+                const res = await apiFetch(`/api/inscricoes/${inscricaoId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Erro ao cancelar');
+
+                state.inscricoes.delete(palestraId);
+                delete state.inscricoesMap[palestraId];
+
+                atualizarBotoesInscricao();
+                atualizarEstatisticas();
+                renderizarMinhasInscricoes();
+                
+                alert('Inscrição cancelada.');
+            } catch (error) {
+                alert('Não foi possível cancelar a inscrição.');
+            }
+        }
+
+        // --- UI Auxiliar ---
+        function atualizarEstatisticas() {
+            const total = state.inscricoes.size;
+            document.getElementById('totalInscritas').textContent = total;
+            
+            let horas = 0;
+            state.inscricoes.forEach(pid => {
+                const meta = state.metaDadosPalestras[pid];
+                if (meta) horas += meta.duracaoHoras;
+            });
+            
+            document.getElementById('horasCertificado').textContent = horas.toFixed(1) + 'h';
+            
+            const progresso = Math.min((horas / 20) * 100, 100);
+            document.getElementById('progressoCertificado').textContent = progresso.toFixed(0) + '%';
+        }
+
+        function renderizarMinhasInscricoes() {
+            const container = document.getElementById('minhasInscricoes');
+            const lista = document.getElementById('listaInscricoes');
+            
+            if (state.inscricoes.size === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            lista.innerHTML = '';
+            
+            state.inscricoes.forEach(pid => {
+                const meta = state.metaDadosPalestras[pid];
+                if (!meta) return;
+
+                const div = document.createElement('div');
+                div.className = 'inscricao-item';
+                div.innerHTML = `
+                    <div class="inscricao-info">
+                        <h4>${meta.titulo}</h4>
+                        <p>📅 ${meta.horario}</p>
+                    </div>
+                    <button class="btn-cancelar" data-id="${pid}">Cancelar</button>
+                `;
+                lista.appendChild(div);
+            });
+        }
+
+        // --- Popup de Notícias ---
+        function gerenciarPopup() {
+            const hoje = new Date().toDateString();
+            const naoMostrar = localStorage.getItem('popupNoticiasNaoMostrar');
+            const ultimaVez = localStorage.getItem('popupNoticiasData');
+
+            if (naoMostrar !== 'true' || ultimaVez !== hoje) {
+                setTimeout(() => {
+                    document.getElementById('popupNoticias').style.display = 'flex';
+                }, 1000);
+            }
+        }
+
+        function fecharPopup() {
+            document.getElementById('popupNoticias').style.display = 'none';
+            localStorage.setItem('popupNoticiasData', new Date().toDateString());
+        }
+
+        function salvarPreferencia() {
+            const chk = document.getElementById('naoMostrarNovamente');
+            if (chk.checked) localStorage.setItem('popupNoticiasNaoMostrar', 'true');
+            else localStorage.removeItem('popupNoticiasNaoMostrar');
+        }
+        
+        function fecharModal() {
+            document.getElementById('modalInscricao').style.display = 'none';
+        }
+
+        // --- Inicialização ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Listeners estáticos
+            const btnLogout = document.getElementById('btnLogout');
+            if (btnLogout) btnLogout.addEventListener('click', logoutUsuario);
+
+            const btnFecharPopupX = document.getElementById('btnFecharPopupX');
+            if (btnFecharPopupX) btnFecharPopupX.addEventListener('click', fecharPopup);
+
+            const btnFecharPopupEntendi = document.getElementById('btnFecharPopupEntendi');
+            if (btnFecharPopupEntendi) btnFecharPopupEntendi.addEventListener('click', fecharPopup);
+
+            const chkPreferencia = document.getElementById('naoMostrarNovamente');
+            if (chkPreferencia) chkPreferencia.addEventListener('change', salvarPreferencia);
+
+            const btnFecharModalX = document.getElementById('btnFecharModalX');
+            if (btnFecharModalX) btnFecharModalX.addEventListener('click', fecharModal);
+
+            // Event Delegation para elementos dinâmicos
+            document.getElementById('palestrasLista').addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('btn-inscrever')) {
+                    const id = e.target.getAttribute('data-id');
+                    handleInscricaoClick(id, e.target);
+                }
+            });
+
+            const listaInscricoes = document.getElementById('listaInscricoes');
+            if (listaInscricoes) {
+                listaInscricoes.addEventListener('click', function(e) {
+                    if (e.target && e.target.classList.contains('btn-cancelar')) {
+                        const id = e.target.getAttribute('data-id');
+                        cancelarInscricao(id);
+                    }
+                });
+            }
+
+            await carregarUsuario();
+            await carregarPalestras();
+            await carregarInscricoes();
+            
+            gerenciarPopup();
+        });
+    </script>
+</body>
+</html>

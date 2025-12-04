@@ -7,6 +7,61 @@ const EmailAdapter = require('../utils/EmailAdapter');
 const nodemailer = require('nodemailer');
 const router = express.Router();
 
+function sanitizeRedirect(target) {
+  if (!target || typeof target !== 'string') return '/index.html';
+  if (target.startsWith('http')) return '/index.html';
+  return target.startsWith('/') ? target : `/${target}`;
+}
+
+function handleLogout(req, res, options = {}) {
+  const { redirectTo } = options;
+
+  try {
+    req.logout(function(err) {
+      if (err) {
+        console.error('Erro no logout:', err);
+        return res.status(500).json({ erro: 'Erro ao fazer logout' });
+      }
+
+      const finalizeResponse = () => {
+        const redirectTarget = redirectTo ? sanitizeRedirect(redirectTo) : null;
+        if (redirectTarget) {
+          return res.redirect(redirectTarget);
+        }
+        return res.json({ mensagem: 'Logout ok' });
+      };
+
+      const destroySession = () => {
+        try {
+          res.clearCookie('fatecweek.sid', { path: '/' });
+        } catch (cookieErr) {
+          console.error('Erro ao limpar cookie fatecweek.sid:', cookieErr);
+        }
+        try {
+          res.clearCookie('connect.sid', { path: '/' });
+        } catch (cookieErr) {
+          console.error('Erro ao limpar cookie connect.sid:', cookieErr);
+        }
+        return finalizeResponse();
+      };
+
+      if (req.session) {
+        req.session.destroy(function(sessionErr) {
+          if (sessionErr) {
+            console.error('Erro ao destruir sessão:', sessionErr);
+          }
+          return destroySession();
+        });
+      } else {
+        return destroySession();
+      }
+    });
+  } catch (err) {
+    console.error('Erro geral no logout:', err);
+    return res.status(500).json({ erro: 'Erro ao fazer logout' });
+  }
+}
+
 // Helper reutilizável para pós-autenticação Google
 async function processPostGoogleAuth(req, res) {
   try {
@@ -282,33 +337,11 @@ router.post("/verificar-usuario", async (req, res) => {
   }
 });
 
-router.post("/logout", (req, res) => {
-  try {
-    // passport 0.6+ expects a callback for logout
-    req.logout(function(err) {
-      if (err) {
-        console.error('Erro no logout:', err);
-        return res.status(500).json({ erro: 'Erro ao fazer logout' });
-      }
+router.post('/logout', (req, res) => handleLogout(req, res));
 
-      // Destrói a sessão do servidor
-      req.session.destroy(function(sessionErr) {
-        if (sessionErr) console.error('Erro ao destruir sessão:', sessionErr);
-
-        // Limpa o cookie de sessão do cliente (nome padrão: connect.sid)
-        try {
-          res.clearCookie('connect.sid', { path: '/' });
-        } catch (cookieErr) {
-          console.error('Erro ao limpar cookie de sessão:', cookieErr);
-        }
-
-        return res.json({ mensagem: 'Logout ok' });
-      });
-    });
-  } catch (err) {
-    console.error('Erro geral no logout:', err);
-    return res.status(500).json({ erro: 'Erro ao fazer logout' });
-  }
+router.get('/logout', (req, res) => {
+  const redirectTo = req.query.redirect || '/index.html';
+  return handleLogout(req, res, { redirectTo });
 });
 
 // ✅ Completar perfil
@@ -535,6 +568,44 @@ Equipe FatecWeek`;
   } catch (err) {
     console.error('Erro em /debug/send-test-certificate:', err);
     return res.status(500).json({ sucesso: false, erro: err.message });
+  }
+});
+
+// Rota de emergência para corrigir usuários que foram criados incorretamente como Docentes
+router.get('/force-aluno', async (req, res) => {
+  if (!req.user) return res.status(401).send('Faça login primeiro (mesmo que caia no dashboard errado).');
+  
+  try {
+    const email = req.user.email;
+    console.log(`🔧 Corrigindo usuário ${email} para Aluno...`);
+
+    // 1. Remove do collection de Docentes
+    await Docente.deleteOne({ email });
+
+    // 2. Força tipo 'aluno' no Usuario
+    await Usuario.findOneAndUpdate(
+      { email },
+      { tipo: 'aluno' }
+    );
+
+    // 3. Garante que existe Participante (se não existir)
+    let part = await Participante.findOne({ email });
+    if (!part) {
+        await Participante.create({
+            email,
+            nome: req.user.nome || req.user.displayName,
+            ra: 'TEMP-' + Date.now(), // RA temporário para forçar completar perfil
+            usuarioId: req.user._id
+        });
+    }
+
+    res.send(`
+      <h1>✅ Conta corrigida!</h1>
+      <p>Seu usuário agora é do tipo <strong>ALUNO</strong>.</p>
+      <p><a href="/api/auth/logout">Clique aqui para Sair e Logar novamente</a></p>
+    `);
+  } catch (err) {
+    res.status(500).send('Erro ao corrigir conta: ' + err.message);
   }
 });
 

@@ -3,11 +3,9 @@ const bcrypt = require('bcrypt');
 
 const usuarioSchema = new mongoose.Schema({
     nome: { type: String, required: true },
-    ra: { type: String, required: false }, // Removido unique: true daqui
-    email: { type: String, required: true, unique: true },
-    // senha agora é opcional: usuários que se registram via OAuth não precisarão de senha
+    ra: { type: String, required: false },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     senha: { type: String, required: false },
-    // tipo indica se é 'aluno' ou 'docente' (padrão 'aluno')
     tipo: { type: String, enum: ['aluno', 'docente', 'admin'], default: 'aluno' },
     curso: { type: String, enum: [
         "Automação Industrial",
@@ -27,6 +25,9 @@ const usuarioSchema = new mongoose.Schema({
         "5º Semestre",
         "6º Semestre"
     ], default: "1º Semestre" },
+    participanteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Participante' },
+    ultimoLoginEm: { type: Date },
+    perfilCompletoEm: { type: Date },
     pontos: { type: Number, default: 0 },
     ativo: { type: Boolean, default: true }
 }, { timestamps: true });
