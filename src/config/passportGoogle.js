@@ -1,35 +1,63 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const Usuario = require("../models/Usuario");
+const Participante = require("../models/Participante");
+const Docente = require("../models/Docente");
 
+console.log("✅ Modelos carregados:", { 
+  Usuario: !!Usuario, 
+  Participante: !!Participante, 
+  Docente: !!Docente 
+});
+
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI;
+
+const hasGoogleOAuthConfig =
+  googleClientId &&
+  googleClientSecret &&
+  googleRedirectUri &&
+  googleClientId !== "dummy_client_id" &&
+  googleClientSecret !== "dummy_client_secret";
+
+if (!hasGoogleOAuthConfig) {
+  throw new Error(
+    "Google OAuth não configurado corretamente. Defina GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET e GOOGLE_REDIRECT_URI no .env com credenciais reais do Google Cloud Console."
+  );
+}
+
+// Estratégia: não criamos registros automaticamente aqui.
+// Apenas retornamos o perfil básico ao Passport e deixamos a lógica de criação/atualização
+// para as rotas (ex: /api/auth/completar ou fluxo de callback em authRoutes).
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_REDIRECT_URI,
+      clientID: googleClientId,
+      clientSecret: googleClientSecret,
+      callbackURL: googleRedirectUri,
+      proxy: true
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const email = profile.emails[0].value;
-        const nome = profile.displayName;
+        console.log("🔍 Perfil Google recebido:", {
+          id: profile.id,
+          displayName: profile.displayName,
+          emails: profile.emails
+        });
 
-        // Verifica se já existe no banco
-        let usuario = await Usuario.findOne({ email });
-
-        if (!usuario) {
-          console.log("🆕 Novo usuário detectado:", email);
-
-          usuario = await Usuario.create({
-            nome,
-            email,
-            tipo: "aluno", // Padrão é aluno, pode ser alterado depois
-          });
-        } else {
-          console.log("🔁 Usuário já existe:", email);
+        const email = profile.emails?.[0]?.value;
+        const nome = profile.displayName || profile.name?.givenName || '';
+        
+        if (!email) {
+          console.error("❌ Email não disponível no perfil Google");
+          return done(new Error('E-mail não disponível no perfil Google'));
         }
 
-        return done(null, usuario);
+        console.log("✅ Autenticação Google bem sucedida para:", email);
+        
+        // Passa um objeto simples para a sessão. A rota de callback decide o que criar/atualizar.
+        return done(null, { email, nome });
       } catch (err) {
         console.error("❌ Erro Login Google:", err);
         return done(err, null);
@@ -38,17 +66,70 @@ passport.use(
   )
 );
 
+// Serializa apenas o email (string) para a sessão
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+  if (!user) return done(new Error('No user to serialize'));
+  done(null, user.email || user);
 });
 
-passport.deserializeUser(async (id, done) => {
+// Desserializa consultando as coleções na ordem Usuario -> Participante -> Docente
+passport.deserializeUser(async (email, done) => {
   try {
-    const usuario = await Usuario.findById(id);
-    done(null, usuario);
+    if (!email) return done(null, null);
+    
+    try {
+      // 1) Usuario (manuais / completados)
+      const usuario = await Usuario.findOne({ email });
+      if (usuario) {
+        return done(null, { 
+          origem: 'usuario', 
+          data: usuario, 
+          email: usuario.email, 
+          nome: usuario.nome, 
+          tipo: usuario.tipo || 'aluno' 
+        });
+      }
+
+      // 2) Participante (alunos)
+      const participante = await Participante.findOne({ email });
+      if (participante) {
+        return done(null, { 
+          origem: 'participante', 
+          data: participante, 
+          email: participante.email, 
+          nome: participante.nome, 
+          tipo: 'aluno' 
+        });
+      }
+
+      // 3) Docente
+      const docente = await Docente.findOne({ email });
+      if (docente) {
+        return done(null, { 
+          origem: 'docente', 
+          data: docente, 
+          email: docente.email, 
+          nome: docente.nome, 
+          tipo: 'docente' 
+        });
+      }
+
+      // Não encontrado — retorna objeto mínimo com email
+      return done(null, { 
+        origem: 'oauth', 
+        data: { email }, 
+        email, 
+        nome: undefined, 
+        tipo: undefined 
+      });
+    } catch (err) {
+      console.error('Erro ao buscar usuário:', err);
+      return done(err);
+    }
   } catch (err) {
+    console.error('Erro no deserializeUser (Google):', err);
     done(err, null);
   }
 });
 
-console.log("✅ Google OAuth configurado!");
+console.log("✅ Google OAuth configurado (não cria registros automaticamente).");

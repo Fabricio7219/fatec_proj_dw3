@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Aluno - FatecWeek 2025</title>
+    <title>Login - FatecWeek 2025</title>
     <link rel="stylesheet" href="style-aluno.css">
 </head>
 
 <body>
     <header class="header">
         <div class="header-content">
-            <img src="img/logo_fatec.png" alt="Logo FatecWeek" class="logo-principal">
+            <img src="https://i.imgur.com/WXNFN93.png" alt="Logo FatecWeek" class="logo-principal">
             <a href="index.html" class="btn-voltar">← Voltar</a>
         </div>
     </header>
@@ -19,18 +19,60 @@
     <main class="login-container">
         <div class="login-card">
             <div class="login-header login-header-aluno">
-                <h1>🎓Login </h1>
-                   <p>Acesse com sua conta Google</p>
+                <h1>🎓 Login</h1>
+                <p>Acesse com Gmail ou e-mail</p>
             </div>
 
             <div class="login-content">
                 <div id="loginStatus" class="status-message"></div>
 
-                <!-- 🔹 Botão de login via Google -->
-                <a href="http://localhost:3000/api/auth/google" class="btn-google">
-                    <img src="img/g-logo.png" class="google-icon" alt="">
-                    Entrar com Google
+                <a href="/api/auth/google" class="btn-google" id="btnGoogle">
+                    <img src="https://developers.google.com/identity/images/g-logo.png" class="google-icon" alt="Google">
+                    Entrar com Gmail
                 </a>
+
+                <div class="auth-divider">ou</div>
+
+                <div id="authEmail" class="auth-pane active">
+                    <div class="email-switch">
+                        <button id="emailModeLogin" class="active" onclick="trocarModoEmail('login')" type="button">Já tenho conta</button>
+                        <button id="emailModeCadastro" onclick="trocarModoEmail('cadastro')" type="button">Criar conta</button>
+                    </div>
+
+                    <form id="formLoginEmail" class="email-form" onsubmit="loginComEmail(event)">
+                        <input type="email" id="loginEmail" placeholder="Seu e-mail" required>
+                        <input type="password" id="loginSenha" placeholder="Sua senha" required>
+                        <button class="btn-email" type="submit">Entrar com E-mail</button>
+                    </form>
+
+                    <form id="formCadastroEmail" class="email-form" style="display:none;" onsubmit="cadastrarComEmail(event)">
+                        <input type="text" id="cadNome" placeholder="Nome completo" required>
+                        <input type="text" id="cadRA" placeholder="RA" required>
+                        <input type="email" id="cadEmail" placeholder="E-mail" required>
+                        <input type="password" id="cadSenha" placeholder="Senha" minlength="6" required>
+                        <select id="cadCurso" required>
+                            <option value="">Selecione o curso</option>
+                            <option value="Automação Industrial">Automação Industrial</option>
+                            <option value="Desenvolvimento de Software Multiplataforma">Desenvolvimento de Software Multiplataforma</option>
+                            <option value="Gestão Empresarial (EaD)">Gestão Empresarial (EaD)</option>
+                            <option value="Gestão Financeira">Gestão Financeira</option>
+                            <option value="Manutenção Industrial">Manutenção Industrial</option>
+                            <option value="Redes de Computadores">Redes de Computadores</option>
+                            <option value="Sistemas Biomédicos">Sistemas Biomédicos</option>
+                            <option value="Não informado">Não informado</option>
+                        </select>
+                        <select id="cadSemestre" required>
+                            <option value="">Selecione o semestre</option>
+                            <option value="1º Semestre">1º Semestre</option>
+                            <option value="2º Semestre">2º Semestre</option>
+                            <option value="3º Semestre">3º Semestre</option>
+                            <option value="4º Semestre">4º Semestre</option>
+                            <option value="5º Semestre">5º Semestre</option>
+                            <option value="6º Semestre">6º Semestre</option>
+                        </select>
+                        <button class="btn-email" type="submit">Criar conta com E-mail</button>
+                    </form>
+                </div>
 
                 <!-- 🔹 Área visível apenas se estiver logado -->
                 <div id="userInfo" class="user-info" style="display: none;">
@@ -54,7 +96,7 @@
             <div class="login-info">
                 <h3>ℹ️ Informações Importantes</h3>
                 <ul>
-                    <li>Use seu e-mail Google pessoal ou institucional</li>
+                    <li>Use seu e-mail pessoal ou institucional</li>
                     <li>Seus dados estão protegidos e seguros</li>
                     <li>Você poderá se inscrever nas palestras após o login</li>
                 </ul>
@@ -67,48 +109,50 @@
     </footer>
 
     <script>
-        // Verifica se há returnTo na URL para ajustar o link do Google
-        document.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            const returnTo = params.get('returnTo');
-            if (returnTo) {
-                const btnGoogle = document.querySelector('.btn-google');
-                if (btnGoogle) {
-                    // Adiciona o returnTo ao link de login
-                    const currentHref = btnGoogle.getAttribute('href');
-                    const separator = currentHref.includes('?') ? '&' : '?';
-                    btnGoogle.setAttribute('href', `${currentHref}${separator}returnTo=${encodeURIComponent(returnTo)}`);
-                }
-            }
-            checkLogin();
-        });
-
         async function checkLogin() {
             try {
-                const res = await fetch("http://localhost:3000/api/auth/me", { credentials: "include" });
+                console.log("Verificando login...");
+                const res = await fetch("/api/auth/me", { 
+                    credentials: "include",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                console.log("Status da resposta:", res.status);
 
                 if (res.status === 200) {
                     const user = await res.json();
+                    console.log("Dados do usuário:", user);
 
                     // 🔹 guarda dados para completar cadastro se necessário
                     localStorage.setItem("email", user.email);
                     localStorage.setItem("nome", user.nome);
 
-                    // ✅ Se ainda não tem RA → manda completar cadastro
-                    if (!user.tipo || !user.ra) {
+                    // ✅ Verifica se cadastro está completo
+                    if (user.cadastroCompleto) {
+                        if (user.tipo === "docente") {
+                            console.log("Redirecionando para dashboard docente...");
+                            return window.location.href = "dashboard-docente.html";
+                        } else {
+                            console.log("Redirecionando para dashboard aluno...");
+                            return window.location.href = "dashboard-aluno.html";
+                        }
+                    } else {
+                        console.log("Redirecionando para completar perfil...");
                         return window.location.href = "completar-perfil.html";
                     }
-
-                    // ✅ Se já tem cadastro completo → mostra painel de info
-                    displayUserInfo(user);
+                } else {
+                    console.log("Usuário não autenticado");
+                    document.getElementById('userInfo').style.display = 'none';
                 }
             } catch (err) {
-                console.log("Não logado:", err);
+                console.error("Erro ao verificar login:", err);
+                document.getElementById('userInfo').style.display = 'none';
             }
         }
 
         function displayUserInfo(user) {
-            document.querySelector('.btn-google').style.display = 'none';
             document.getElementById('userInfo').style.display = 'block';
             document.getElementById('userName').textContent = user.nome;
             document.getElementById('userEmail').textContent = user.email;
@@ -116,13 +160,130 @@
         }
 
         async function signOut() {
-            await fetch("http://localhost:3000/api/auth/logout", { method: "POST", credentials: "include" });
-            localStorage.clear();
-            window.location.reload();
+            try {
+                await fetch("/api/auth/logout", { 
+                    method: "POST", 
+                    credentials: "include"
+                });
+                // Limpa todo o localStorage
+                localStorage.clear();
+                // Limpa qualquer cookie de sessão
+                document.cookie.split(";").forEach(c => {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+                // Redireciona para a página inicial em vez de recarregar
+                window.location.href = "index.html";
+            } catch (err) {
+                console.error("Erro ao fazer logout:", err);
+                alert("Erro ao fazer logout. Tente novamente.");
+            }
         }
 
         function continuarParaDashboard() {
             window.location.href = "dashboard-aluno.html";
+        }
+
+        function mostrarStatus(mensagem, tipo = 'info') {
+            const el = document.getElementById('loginStatus');
+            el.textContent = mensagem;
+            el.className = `status-message ${tipo}`;
+            el.style.display = 'block';
+        }
+
+        function trocarModoEmail(modo) {
+            const btnLogin = document.getElementById('emailModeLogin');
+            const btnCadastro = document.getElementById('emailModeCadastro');
+            const formLogin = document.getElementById('formLoginEmail');
+            const formCadastro = document.getElementById('formCadastroEmail');
+
+            if (modo === 'cadastro') {
+                btnLogin.classList.remove('active');
+                btnCadastro.classList.add('active');
+                formLogin.style.display = 'none';
+                formCadastro.style.display = 'flex';
+            } else {
+                btnCadastro.classList.remove('active');
+                btnLogin.classList.add('active');
+                formCadastro.style.display = 'none';
+                formLogin.style.display = 'flex';
+            }
+        }
+
+        async function cadastrarComEmail(event) {
+            event.preventDefault();
+            try {
+                const body = {
+                    nome: document.getElementById('cadNome').value.trim(),
+                    ra: document.getElementById('cadRA').value.trim(),
+                    email: document.getElementById('cadEmail').value.trim().toLowerCase(),
+                    senha: document.getElementById('cadSenha').value,
+                    curso: document.getElementById('cadCurso').value,
+                    semestre: document.getElementById('cadSemestre').value
+                };
+
+                const res = await fetch('/api/usuarios/cadastro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(body)
+                });
+
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    mostrarStatus(json.erro || 'Não foi possível criar sua conta.', 'error');
+                    return;
+                }
+
+                mostrarStatus('Conta criada com sucesso. Entrando...', 'success');
+
+                const loginRes = await fetch('/api/usuarios/login-local', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email: body.email, senha: body.senha })
+                });
+
+                const loginJson = await loginRes.json().catch(() => ({}));
+                if (!loginRes.ok) {
+                    mostrarStatus(loginJson.erro || 'Conta criada, mas o login não foi concluído. Faça login na aba "Já tenho conta".', 'info');
+                    trocarModoEmail('login');
+                    return;
+                }
+
+                window.location.href = 'dashboard-aluno.html';
+            } catch (error) {
+                console.error('Erro no cadastro por e-mail:', error);
+                mostrarStatus('Erro de rede ao criar conta.', 'error');
+            }
+        }
+
+        async function loginComEmail(event) {
+            event.preventDefault();
+            try {
+                const body = {
+                    email: document.getElementById('loginEmail').value.trim().toLowerCase(),
+                    senha: document.getElementById('loginSenha').value
+                };
+
+                const res = await fetch('/api/usuarios/login-local', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(body)
+                });
+
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    mostrarStatus(json.erro || 'Falha no login por e-mail.', 'error');
+                    return;
+                }
+
+                mostrarStatus('Login realizado com sucesso!', 'success');
+                window.location.href = 'dashboard-aluno.html';
+            } catch (error) {
+                console.error('Erro no login por e-mail:', error);
+                mostrarStatus('Erro de rede ao fazer login.', 'error');
+            }
         }
 
         window.onload = checkLogin;

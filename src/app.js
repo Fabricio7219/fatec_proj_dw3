@@ -94,6 +94,7 @@ app.use(passport.session());
 // Serve arquivos da raiz do projeto (volta um nível a partir de /src)
 // 🗂️ Arquivos estáticos (HTML/CSS/JS)
 app.use(express.static('public'));
+app.use('/certificates', express.static(path.join(process.cwd(), 'certificates')));
 
 
 

@@ -121,6 +121,35 @@ body {
     border: 1px solid #bee5eb;
 }
 
+.btn-google {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+    background: #ffffff;
+    color: #202124;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-google:hover {
+    background: #f8f9fa;
+    border-color: #c6c6c6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.google-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
 .btn-microsoft {
     width: 100%;
     background: white;
@@ -143,6 +172,103 @@ body {
     border-color: #5e5e5e;
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.auth-tab {
+    padding: 10px 12px;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.auth-tab.active {
+    background: #0066cc;
+    color: #fff;
+    border-color: #0066cc;
+}
+
+.auth-pane {
+    display: none;
+}
+
+.auth-pane.active {
+    display: block;
+}
+
+.auth-divider {
+    margin: 14px 0;
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+}
+
+.email-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.email-form input,
+.email-form select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.btn-email {
+    width: 100%;
+    background: #0b7a43;
+    color: #fff;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-email:hover {
+    filter: brightness(0.95);
+}
+
+.email-switch {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.email-switch button {
+    flex: 1;
+    border: 1px solid #d0d7de;
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.email-switch button.active {
+    background: #eaf3ff;
+    border-color: #0066cc;
+    color: #004499;
+}
+
+.small-help {
+    color: #666;
+    font-size: 12px;
+    margin-top: 4px;
 }
 
 .user-info {

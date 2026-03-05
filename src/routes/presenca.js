@@ -1,16 +1,17 @@
 // src/routes/presenca.js
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 
 // Importar modelos e utilidades
 const Participante = require('../models/Participante');
 const Presenca = require('../models/Presenca');
 const Palestra = require('../models/Palestra');
 const { generateCertificate } = require('../utils/certificate');
+const Pontuacao = require('../models/Pontuacao');
 const EmailAdapter = require('../utils/EmailAdapter');
 const { verificarPerimetro } = require('../utils/location');
 const { gpsStrategy, qrStrategy } = require('../utils/presencaStrategies');
-const { creditPoints } = require('../utils/points');
 
 // Tolerâncias configuráveis (minutos) — padrão: 30 antes do início, 30 após o fim
 const TOL_BEFORE_MIN = Number(process.env.PRESENCA_TOL_BEFORE_MINUTES || 30);
@@ -25,58 +26,67 @@ function calcularJanelaTempo(palestra) {
     return { inicio, fim, inicioPermitido, fimPermitido };
 }
 
+function calcularMinimoCertificado(palestra) {
+    const percentualRaw = Number(process.env.CERT_THRESHOLD_PERCENT || 0.6);
+    const percentual = Number.isFinite(percentualRaw) ? Math.min(1, Math.max(0, percentualRaw)) : 0.6;
+    const duracao = Math.max(1, Number(palestra?.duracao_minutos || 60));
+    return Math.max(1, Math.ceil(duracao * percentual));
+}
+
 
 const ensureParticipante = require('../middleware/ensureParticipante');
-const path = require('path');
-const fs = require('fs');
 
 /**
- * GET /presenca/certificados
- * Listar certificados do participante logado
+ * GET /presenca/minhas
+ * Lista presenças do participante autenticado e links de certificados disponíveis
  */
-router.get('/certificados', ensureParticipante, async (req, res) => {
+router.get('/minhas', ensureParticipante, async (req, res) => {
     try {
-        const participanteId = req.body.participanteId;
-        const presencas = await Presenca.find({
-            participanteId,
-            $or: [
-                { certificadoEnviado: true },
-                { certificadoPath: { $exists: true, $ne: null } }
-            ]
-        }).populate('palestraId', 'titulo data duracao_minutos');
+        const participanteId = req.body?.participanteId;
+        if (!participanteId) {
+            return res.status(400).json({ sucesso: false, erro: 'Participante não identificado' });
+        }
 
-        res.json({ sucesso: true, certificados: presencas });
+        const presencas = await Presenca.find({ participanteId }).sort({ createdAt: -1 });
+        const palestraIds = [...new Set(presencas.map(p => String(p.palestraId)).filter(Boolean))];
+        const palestras = await Palestra.find({ _id: { $in: palestraIds } }).select('_id titulo data duracao_minutos');
+        const palestraMap = palestras.reduce((acc, p) => {
+            acc[String(p._id)] = p;
+            return acc;
+        }, {});
+
+        const dados = presencas.map(p => {
+            const palestra = palestraMap[String(p.palestraId)] || null;
+            const certificadoUrl = p.certificadoPath
+                ? `/certificates/${encodeURIComponent(path.basename(p.certificadoPath))}`
+                : null;
+            const minimoCertificadoMinutos = calcularMinimoCertificado(palestra || { duracao_minutos: 60 });
+
+            return {
+                _id: p._id,
+                palestraId: p.palestraId,
+                palestraTitulo: palestra?.titulo || 'Palestra',
+                palestraData: palestra?.data || null,
+                palestraDuracaoMinutos: Number(palestra?.duracao_minutos || 60),
+                minimoCertificadoMinutos,
+                duracaoMinutos: p.duracaoMinutos || 0,
+                horarioEntrada: p.horario_entrada,
+                horarioSaida: p.horario_saida,
+                certificadoEnviado: !!p.certificadoEnviado,
+                certificadoDisponivel: !!certificadoUrl,
+                certificadoUrl
+            };
+        });
+
+        return res.json({
+            sucesso: true,
+            total: dados.length,
+            comparecidas: dados.filter(d => !!d.horarioSaida).length,
+            comCertificado: dados.filter(d => d.certificadoDisponivel).length,
+            dados
+        });
     } catch (error) {
-        res.status(500).json({ sucesso: false, erro: error.message });
-    }
-});
-
-/**
- * GET /presenca/download-certificado/:presencaId
- * Baixar certificado
- */
-router.get('/download-certificado/:presencaId', ensureParticipante, async (req, res) => {
-    try {
-        const presenca = await Presenca.findById(req.params.presencaId);
-        if (!presenca) return res.status(404).json({ erro: 'Presença não encontrada' });
-
-        // Verificar se o certificado pertence ao usuário logado
-        if (presenca.participanteId.toString() !== req.body.participanteId.toString()) {
-             return res.status(403).json({ erro: 'Acesso negado' });
-        }
-
-        if (!presenca.certificadoPath) {
-            return res.status(404).json({ erro: 'Certificado não gerado' });
-        }
-
-        const filepath = presenca.certificadoPath;
-        if (!fs.existsSync(filepath)) {
-            return res.status(404).json({ erro: 'Arquivo do certificado não encontrado no servidor' });
-        }
-
-        res.download(filepath);
-    } catch (error) {
-        res.status(500).json({ erro: error.message });
+        return res.status(500).json({ sucesso: false, erro: error.message });
     }
 });
 
@@ -115,8 +125,7 @@ router.post('/entrada', ensureParticipante, async (req, res) => {
         const modo = req.body.modo || 'gps'; // 'gps' ou 'qr'
         let verifica;
         if (modo === 'qr') {
-            // Agora passamos localização também para o QR Strategy
-            verifica = await qrStrategy({ qrData: req.body.qrData, palestra, localizacao });
+            verifica = await qrStrategy({ qrData: req.body.qrData, palestra });
         } else {
             verifica = await gpsStrategy({ localizacao, palestra });
         }
@@ -128,7 +137,7 @@ router.post('/entrada', ensureParticipante, async (req, res) => {
         // Verifica se já existe presença registrada
         let presenca = await Presenca.findOne({
             participanteId,
-            palestraId: palestra._id,
+            palestraId,
             horario_saida: null
         });
 
@@ -142,7 +151,7 @@ router.post('/entrada', ensureParticipante, async (req, res) => {
         // Cria novo registro de presença
         presenca = new Presenca({
             participanteId,
-            palestraId: palestra._id,
+            palestraId,
             horario_entrada: new Date(),
             localizacao_entrada: {
                 ...localizacao,
@@ -201,7 +210,7 @@ router.post('/saida', ensureParticipante, async (req, res) => {
         const modoSaida = req.body.modo || 'gps';
         let verificaSaida;
         if (modoSaida === 'qr') {
-            verificaSaida = await qrStrategy({ qrData: req.body.qrData, palestra, localizacao });
+            verificaSaida = await qrStrategy({ qrData: req.body.qrData, palestra });
         } else {
             verificaSaida = await gpsStrategy({ localizacao, palestra });
         }
@@ -213,7 +222,7 @@ router.post('/saida', ensureParticipante, async (req, res) => {
         // Busca o registro de presença ativo
         const presenca = await Presenca.findOne({
             participanteId,
-            palestraId: palestra._id,
+            palestraId,
             horario_saida: null
         });
 
@@ -227,7 +236,8 @@ router.post('/saida', ensureParticipante, async (req, res) => {
         // Finaliza a presença existente
         const agoraSaida = new Date();
         const entrada = new Date(presenca.horario_entrada);
-        const tempoMinutos = Math.max(0, Math.floor((agoraSaida.getTime() - entrada.getTime()) / (1000 * 60)));
+        const diffMs = Math.max(0, agoraSaida.getTime() - entrada.getTime());
+        const tempoMinutos = diffMs > 0 ? Math.max(1, Math.ceil(diffMs / (1000 * 60))) : 0;
         presenca.horario_saida = agoraSaida;
         presenca.duracaoMinutos = tempoMinutos;
         if (localizacao && typeof localizacao === 'object') {
@@ -236,62 +246,51 @@ router.post('/saida', ensureParticipante, async (req, res) => {
         await presenca.save();
 
         // Gera certificado e pontuação se atingiu limiar
+        let certificadoGerado = false;
+        let certificadoEnviado = false;
+        const limiarCertificado = calcularMinimoCertificado(palestra);
         try {
-            // O tempo mínimo agora é 60% da duração da palestra (tolerância)
-            const duracaoTotal = Number(palestra.duracao_minutos || process.env.CERT_THRESHOLD_MINUTES || 90);
-            const thresh = duracaoTotal * 0.6; 
-
+            const thresh = limiarCertificado;
             if (tempoMinutos >= thresh) {
                 // Buscar participante para dados de email/certificado
                 const participanteDoc = await Participante.findById(participanteId);
                 if (participanteDoc) {
-                    const certificadoPath = await generateCertificate(participanteDoc.toObject(), { 
-                        palestraNome: palestra.titulo || palestraId,
-                        data: palestra.data,
-                        duracaoMinutos: palestra.duracao_minutos,
-                        local: palestra.local,
-                        palestrante: palestra.palestrante
-                    });
-                    
-                    // Envio de email em standby conforme solicitação
-                    /*
-                    const emailEnviado = await EmailAdapter.sendCertificate(
-                        participanteDoc.email,
-                        `Certificado de participação: ${palestra.titulo || palestraId}`,
-                        `Parabéns, veja em anexo o certificado da palestra ${palestra.titulo || palestraId}.`,
-                        certificadoPath
-                    );
-                    presenca.certificadoEnviado = !!(emailEnviado && (emailEnviado.success || emailEnviado.messageId));
-                    */
-                   
-                    // Apenas salva o caminho para download no dashboard
-                    presenca.certificadoEnviado = false; 
+                    const certificadoPath = await generateCertificate(participanteDoc.toObject(), { palestraNome: palestraId });
+                    presenca.certificadoEnviado = false;
                     presenca.certificadoPath = certificadoPath;
                     await presenca.save();
+                    certificadoGerado = true;
 
-                    const pontosPalestra = Number(palestra.pontos || 0);
-                    if (!presenca.pontosCreditados && !Number.isNaN(pontosPalestra) && pontosPalestra > 0) {
-                        try {
-                            const creditResult = await creditPoints({
-                                participanteId: participanteDoc._id,
-                                valor: pontosPalestra,
-                                tipo: 'palestra',
-                                palestraId: palestra._id
-                            });
-                            presenca.pontosCreditados = true;
-                            presenca.pontosValorAplicado = creditResult.log?.valor || pontosPalestra;
-                            await presenca.save();
-                        } catch (e) {
-                            console.error('Falha ao creditar pontos por palestra:', e?.message || e);
-                        }
+                    try {
+                        const emailResult = await EmailAdapter.sendCertificate(
+                            participanteDoc.email,
+                            `Certificado de participação: ${palestraId}`,
+                            `Parabéns, veja em anexo o certificado da palestra ${palestraId}.`,
+                            certificadoPath
+                        );
+                        presenca.certificadoEnviado = !!(emailResult && (emailResult.success || emailResult.messageId));
+                        await presenca.save();
+                        certificadoEnviado = !!presenca.certificadoEnviado;
+                    } catch (errEmail) {
+                        console.warn('Falha ao enviar certificado por e-mail:', errEmail?.message || errEmail);
                     }
+
+                    // Pontuação definida pelo admin na palestra: ao atingir o limiar, credita pontos totais da palestra
+                    const pontosPalestra = Number(palestra.pontos || 0);
+                                        if (!isNaN(pontosPalestra) && pontosPalestra > 0) {
+                                                participanteDoc.pontos_total = Number(participanteDoc.pontos_total || 0) + pontosPalestra;
+                                                try {
+                                                    await Pontuacao.create({ participanteId: participanteDoc._id, tipo: 'palestra', valor: pontosPalestra, palestraId: palestra._id });
+                                                } catch (e) { console.warn('Falha ao registrar Pontuacao (palestra):', e?.message); }
+                                        }
+                    await participanteDoc.save();
                 }
             }
         } catch (errPres) {
             console.error('Erro ao finalizar/gerar certificado:', errPres);
         }
 
-        res.json({ sucesso: true, mensagem: 'Saída registrada', dados: { presencaId: presenca._id, tempo_permanencia_minutos: tempoMinutos } });
+        res.json({ sucesso: true, mensagem: 'Saída registrada', dados: { presencaId: presenca._id, tempo_permanencia_minutos: tempoMinutos, limiar_certificado_minutos: limiarCertificado, tempo_restante_certificado_minutos: Math.max(0, limiarCertificado - tempoMinutos), elegivel_certificado: tempoMinutos >= limiarCertificado, certificado_gerado: certificadoGerado, certificado_enviado_email: certificadoEnviado } });
     } catch (error) {
         res.status(500).json({ sucesso: false, erro: error.message });
     }
@@ -332,39 +331,6 @@ router.get('/palestra/:id', async (req, res) => {
         const palestraId = req.params.id;
         const presencas = await Presenca.find({ palestraId }).populate('participanteId').sort({ horario_entrada: 1 });
         res.json({ sucesso: true, total: presencas.length, dados: presencas });
-    } catch (error) {
-        res.status(500).json({ sucesso: false, erro: error.message });
-    }
-});
-
-/**
- * GET /presenca/me/:palestraId
- * Verifica o status de presença do usuário atual na palestra
- */
-router.get('/me/:palestraId', ensureParticipante, async (req, res) => {
-    try {
-        const palestraId = req.params.palestraId;
-        const participanteId = req.body.participanteId; // Injetado pelo middleware
-
-        if (!participanteId) {
-            return res.status(400).json({ sucesso: false, erro: 'Participante não identificado' });
-        }
-
-        const presenca = await Presenca.findOne({
-            participanteId,
-            palestraId
-        }).sort({ horario_entrada: -1 }); // Pega o último registro
-
-        if (!presenca) {
-            return res.json({ sucesso: true, status: 'nao_registrado' });
-        }
-
-        if (presenca.horario_saida) {
-            return res.json({ sucesso: true, status: 'finalizado', dados: presenca });
-        }
-
-        return res.json({ sucesso: true, status: 'presente', dados: presenca });
-
     } catch (error) {
         res.status(500).json({ sucesso: false, erro: error.message });
     }
