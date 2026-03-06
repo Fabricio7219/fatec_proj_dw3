@@ -255,7 +255,14 @@ router.post('/saida', ensureParticipante, async (req, res) => {
                 // Buscar participante para dados de email/certificado
                 const participanteDoc = await Participante.findById(participanteId);
                 if (participanteDoc) {
-                    const certificadoPath = await generateCertificate(participanteDoc.toObject(), { palestraNome: palestraId });
+                    const certificadoPath = await generateCertificate(participanteDoc.toObject(), {
+                        palestraNome: palestra.titulo,
+                        data: palestra.data,
+                        duracaoMinutos: palestra.duracao_minutos,
+                        local: palestra.local,
+                        palestrante: palestra.palestrante,
+                        tipo: palestra.tipo
+                    });
                     presenca.certificadoEnviado = false;
                     presenca.certificadoPath = certificadoPath;
                     await presenca.save();
@@ -264,8 +271,8 @@ router.post('/saida', ensureParticipante, async (req, res) => {
                     try {
                         const emailResult = await EmailAdapter.sendCertificate(
                             participanteDoc.email,
-                            `Certificado de participação: ${palestraId}`,
-                            `Parabéns, veja em anexo o certificado da palestra ${palestraId}.`,
+                            `Certificado de participacao: ${palestra.titulo}`,
+                            `Parabens! Segue em anexo o certificado referente a atividade "${palestra.titulo}".`,
                             certificadoPath
                         );
                         presenca.certificadoEnviado = !!(emailResult && (emailResult.success || emailResult.messageId));

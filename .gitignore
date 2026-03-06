@@ -20,3 +20,8 @@ Thumbs.db
 # Build/Output
 dist/
 build/
+
+# Artefatos locais do projeto
+certificates/*.pdf
+*.bak
+check_env.js

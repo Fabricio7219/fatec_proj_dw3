@@ -2,6 +2,23 @@
 
 Este guia descreve como publicar a aplicação FatecWeek em plataformas como Render ou Railway, usando MongoDB Atlas e configurando OAuth do Google e envio de emails.
 
+## Publicação de demonstração
+
+Para demo, prefira `Render` ou `Railway`. Isso mantém uma URL HTTPS estável para o OAuth.
+
+Fluxo recomendado (Render):
+
+1. Suba o projeto no GitHub com este backend e pasta `public/`
+2. No Render, crie `New + Web Service` apontando para o repositório
+3. Configure:
+	- Build Command: `npm install`
+	- Start Command: `npm start`
+4. Defina as variáveis de ambiente (seção 5)
+5. Após gerar a URL pública, atualize:
+	- `GOOGLE_REDIRECT_URI=https://SEU-SERVICO.onrender.com/api/auth/google/callback`
+	- Authorized redirect URI no Google Cloud Console com o mesmo valor
+6. Teste `https://SEU-SERVICO.onrender.com/index.html` e login Google
+
 ## 1. Pré-requisitos
 
 - Conta no GitHub e o repositório publicado

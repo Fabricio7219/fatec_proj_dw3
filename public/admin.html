@@ -618,6 +618,7 @@ async function savePalestraFromModal(){
   const titulo = document.getElementById('m_titulo').value.trim();
   if(!titulo){ alert('Título obrigatório'); return; }
   const palestrante = document.getElementById('m_palestrante').value.trim();
+  if(!palestrante){ alert('Palestrante obrigatório'); return; }
   const dataBr = document.getElementById('m_data_br').value.trim();
   const hora = document.getElementById('m_hora').value.trim();
   const local = document.getElementById('m_local').value.trim();
@@ -627,9 +628,29 @@ async function savePalestraFromModal(){
   const duracao = Number(document.getElementById('m_duracao').value || 60);
   const descricao = document.getElementById('m_descricao').value.trim();
   if (!dataBr || !hora) { alert('Informe data e hora'); return; }
-  // Converte dd/mm/aaaa + HH:mm para YYYY-MM-DDTHH:mm
-  const [dd, mm, yyyy] = dataBr.split('/');
-  const dataIsoLocal = `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}T${hora}`;
+  // Aceita dd/mm/aaaa e yyyy-mm-dd para evitar falha silenciosa de parse
+  let yyyy;
+  let mm;
+  let dd;
+  if (dataBr.includes('/')) {
+    const parts = dataBr.split('/').map(v => v.trim());
+    if (parts.length !== 3) { alert('Data inválida. Use dd/mm/aaaa ou yyyy-mm-dd'); return; }
+    [dd, mm, yyyy] = parts;
+  } else if (dataBr.includes('-')) {
+    const parts = dataBr.split('-').map(v => v.trim());
+    if (parts.length !== 3) { alert('Data inválida. Use dd/mm/aaaa ou yyyy-mm-dd'); return; }
+    [yyyy, mm, dd] = parts;
+  } else {
+    alert('Data inválida. Use dd/mm/aaaa ou yyyy-mm-dd');
+    return;
+  }
+
+  if (!yyyy || !mm || !dd) {
+    alert('Data inválida. Preencha novamente.');
+    return;
+  }
+
+  const dataIsoLocal = `${String(yyyy)}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T${hora}`;
   const unidade = document.getElementById('m_unidade').value;
   if (unidade && UNIDADES_PRESET[unidade]) {
     applyUnidadePreset(unidade);
@@ -654,7 +675,8 @@ async function savePalestraFromModal(){
     closeModal();
     await loadPalestras();
   } catch(err){
-    alert('Erro ao salvar palestra');
+    const msg = (err && (err.erro || err.message)) ? (err.erro || err.message) : 'Erro ao salvar palestra';
+    alert(msg);
     console.error(err);
   }
 }

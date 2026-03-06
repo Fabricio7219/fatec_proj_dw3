@@ -35,7 +35,20 @@ const PORT = process.env.PORT || 3000;
 // Permitir que Express reconheça IP real quando estiver atrás de proxy/reverso
 app.set('trust proxy', 1);
 
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https:']
+      }
+    }
+  })
+);
 
 const parsedOrigins = (process.env.ALLOWED_ORIGINS || '')
   .split(',')

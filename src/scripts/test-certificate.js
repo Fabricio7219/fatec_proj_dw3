@@ -2,7 +2,7 @@ const { generateCertificate } = require('../utils/certificate');
 const path = require('path');
 
 async function run() {
-    console.log('Gerando certificado de teste...');
+    console.log('Gerando certificados de teste...');
 
     const mockParticipante = {
         nome: 'Fulano de Tal da Silva',
@@ -16,14 +16,26 @@ async function run() {
         data: new Date(),
         duracaoMinutos: 90,
         local: 'Auditório Principal',
-        palestrante: 'Dr. João Especialista'
+        palestrante: 'Dr. Joao Especialista',
+        tipo: 'palestra'
+    };
+
+    const mockExposicao = {
+        palestraNome: 'Feira de Exposicao de Projetos Integradores',
+        data: new Date(),
+        duracaoMinutos: 240,
+        local: 'Patio Central',
+        palestrante: 'Profa. Marina Coordenadora',
+        tipo: 'exposicao'
     };
 
     try {
-        const filePath = await generateCertificate(mockParticipante, mockPalestra);
-        console.log('\n✅ Certificado gerado com sucesso!');
-        console.log(`📂 Local: ${filePath}`);
-        console.log('👉 Abra este arquivo para visualizar o novo layout.');
+        const filePathPalestra = await generateCertificate(mockParticipante, mockPalestra);
+        const filePathExposicao = await generateCertificate(mockParticipante, mockExposicao);
+        console.log('\n✅ Certificados gerados com sucesso!');
+        console.log(`📂 Palestra: ${filePathPalestra}`);
+        console.log(`📂 Exposicao: ${filePathExposicao}`);
+        console.log('👉 Abra os arquivos para visualizar o novo layout.');
     } catch (error) {
         console.error('Erro ao gerar:', error);
     }
