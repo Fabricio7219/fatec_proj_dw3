@@ -132,6 +132,10 @@ app.get('/', (req, res) => {
   res.send('🚀 API rodando.');
 });
 
+app.get('/healthz', (req, res) => {
+  res.status(200).json({ ok: true, status: 'up' });
+});
+
 app.use((req, res) => res.status(404).json({ erro: 'Rota não encontrada' }));
 
 app.listen(PORT, () => {
