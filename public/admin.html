@@ -340,7 +340,7 @@ async function loadUser(){
         <div class="card">
           <h3>Acesso restrito</h3>
           <p class="small">É necessário efetuar login como docente/administrador para acessar o painel.</p>
-          <div style="margin-top:8px"><button class="btn" onclick="window.location.href='/api/auth/google'">Entrar com Google</button></div>
+          <div style="margin-top:8px"><button class="btn" onclick="window.location.href='/api/auth/google?returnTo=%2Fadmin.html'">Entrar com Google</button></div>
         </div>`;
       throw new Error('Acesso restrito');
     }
@@ -355,7 +355,7 @@ async function loadUser(){
         <div class="card">
           <h3>Faça login</h3>
           <p class="small">Para acessar o painel administrativo, entre com sua conta Google (docente/admin).</p>
-          <div style="margin-top:8px"><button class="btn" onclick="window.location.href='/api/auth/google'">Entrar com Google</button></div>
+          <div style="margin-top:8px"><button class="btn" onclick="window.location.href='/api/auth/google?returnTo=%2Fadmin.html'">Entrar com Google</button></div>
         </div>`;
     } catch(ignore){}
     throw e;

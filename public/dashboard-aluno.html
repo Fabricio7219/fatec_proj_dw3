@@ -12,7 +12,7 @@
             <img src="img/logo_fatec.png" alt="Logo FatecWeek" class="logo-principal">
             <div class="user-header">
                 <span class="user-name" id="userHeaderName">🎓 RA: <span id="userRA">---</span> - <span id="userNome">---</span></span>
-                <a href="#" class="btn-sair" onclick="logoutUsuario(event)">Sair</a>
+                <a href="/api/auth/logout?redirect=%2Findex.html" class="btn-sair" onclick="logoutUsuario(event)">Sair</a>
             </div>
         </div>
     </header>
@@ -332,12 +332,12 @@
             .then(() => {
                 localStorage.clear();
                 sessionStorage.clear();
-                window.location.href = 'index.html';
+                window.location.href = '/index.html';
             })
             .catch(() => {
                 localStorage.clear();
                 sessionStorage.clear();
-                window.location.href = 'index.html';
+                window.location.href = '/api/auth/logout?redirect=%2Findex.html';
             });
         }
 

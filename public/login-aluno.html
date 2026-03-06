@@ -35,17 +35,17 @@
 
                 <div id="authEmail" class="auth-pane active">
                     <div class="email-switch">
-                        <button id="emailModeLogin" class="active" onclick="trocarModoEmail('login')" type="button">Já tenho conta</button>
-                        <button id="emailModeCadastro" onclick="trocarModoEmail('cadastro')" type="button">Criar conta</button>
+                        <button id="emailModeLogin" class="active" type="button">Já tenho conta</button>
+                        <button id="emailModeCadastro" type="button">Criar conta</button>
                     </div>
 
-                    <form id="formLoginEmail" class="email-form" onsubmit="loginComEmail(event)">
+                    <form id="formLoginEmail" class="email-form">
                         <input type="email" id="loginEmail" placeholder="Seu e-mail" required>
                         <input type="password" id="loginSenha" placeholder="Sua senha" required>
                         <button class="btn-email" type="submit">Entrar com E-mail</button>
                     </form>
 
-                    <form id="formCadastroEmail" class="email-form" style="display:none;" onsubmit="cadastrarComEmail(event)">
+                    <form id="formCadastroEmail" class="email-form" style="display:none;">
                         <input type="text" id="cadNome" placeholder="Nome completo" required>
                         <input type="text" id="cadRA" placeholder="RA" required>
                         <input type="email" id="cadEmail" placeholder="E-mail" required>
@@ -131,6 +131,10 @@
 
                     // ✅ Verifica se cadastro está completo
                     if (user.cadastroCompleto) {
+                        if (user.tipo === "admin") {
+                            console.log("Redirecionando para painel admin...");
+                            return window.location.href = "admin.html";
+                        }
                         if (user.tipo === "docente") {
                             console.log("Redirecionando para dashboard docente...");
                             return window.location.href = "dashboard-docente.html";
@@ -201,6 +205,7 @@
                 btnCadastro.classList.add('active');
                 formLogin.style.display = 'none';
                 formCadastro.style.display = 'flex';
+                mostrarStatus('Preencha os dados para criar sua conta.', 'info');
             } else {
                 btnCadastro.classList.remove('active');
                 btnLogin.classList.add('active');
@@ -209,9 +214,28 @@
             }
         }
 
+        function bindAuthEvents() {
+            const btnLogin = document.getElementById('emailModeLogin');
+            const btnCadastro = document.getElementById('emailModeCadastro');
+            const formLogin = document.getElementById('formLoginEmail');
+            const formCadastro = document.getElementById('formCadastroEmail');
+
+            if (btnLogin) btnLogin.addEventListener('click', () => trocarModoEmail('login'));
+            if (btnCadastro) btnCadastro.addEventListener('click', () => trocarModoEmail('cadastro'));
+            if (formLogin) formLogin.addEventListener('submit', loginComEmail);
+            if (formCadastro) formCadastro.addEventListener('submit', cadastrarComEmail);
+        }
+
         async function cadastrarComEmail(event) {
             event.preventDefault();
+            const submitBtn = document.querySelector('#formCadastroEmail button[type="submit"]');
+            const originalText = submitBtn ? submitBtn.textContent : '';
             try {
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Criando conta...';
+                }
+
                 const body = {
                     nome: document.getElementById('cadNome').value.trim(),
                     ra: document.getElementById('cadRA').value.trim(),
@@ -230,7 +254,9 @@
 
                 const json = await res.json().catch(() => ({}));
                 if (!res.ok) {
-                    mostrarStatus(json.erro || 'Não foi possível criar sua conta.', 'error');
+                    const msg = json.erro || 'Não foi possível criar sua conta.';
+                    mostrarStatus(msg, 'error');
+                    alert(msg);
                     return;
                 }
 
@@ -245,15 +271,23 @@
 
                 const loginJson = await loginRes.json().catch(() => ({}));
                 if (!loginRes.ok) {
-                    mostrarStatus(loginJson.erro || 'Conta criada, mas o login não foi concluído. Faça login na aba "Já tenho conta".', 'info');
+                    const msg = loginJson.erro || 'Conta criada, mas o login não foi concluído. Faça login na aba "Já tenho conta".';
+                    mostrarStatus(msg, 'info');
+                    alert(msg);
                     trocarModoEmail('login');
                     return;
                 }
 
-                window.location.href = 'dashboard-aluno.html';
+                window.location.href = (loginJson && loginJson.redirect) ? loginJson.redirect : 'dashboard-aluno.html';
             } catch (error) {
                 console.error('Erro no cadastro por e-mail:', error);
                 mostrarStatus('Erro de rede ao criar conta.', 'error');
+                alert('Erro de rede ao criar conta. Verifique se o servidor está ligado em http://localhost:3000');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText || 'Criar conta com E-mail';
+                }
             }
         }
 
@@ -279,14 +313,17 @@
                 }
 
                 mostrarStatus('Login realizado com sucesso!', 'success');
-                window.location.href = 'dashboard-aluno.html';
+                window.location.href = (json && json.redirect) ? json.redirect : 'dashboard-aluno.html';
             } catch (error) {
                 console.error('Erro no login por e-mail:', error);
                 mostrarStatus('Erro de rede ao fazer login.', 'error');
             }
         }
 
-        window.onload = checkLogin;
+        window.onload = () => {
+            bindAuthEvents();
+            checkLogin();
+        };
     </script>
 </body>
 </html>

@@ -15,7 +15,46 @@ router.post("/cadastro", async (req, res) => {
     const emailNormalizado = String(email).trim().toLowerCase();
 
     const usuarioExistente = await Usuario.findOne({ $or: [{ email: emailNormalizado }, { ra }] });
-    if (usuarioExistente) return res.status(409).json({ erro: "Usuário já existe." });
+    if (usuarioExistente) {
+      // Conta local já existente: em ambiente de teste, evita bloquear o botão de cadastro.
+      if (usuarioExistente.senha) {
+        const senhaConfere = await usuarioExistente.verificarSenha(senha);
+        if (!senhaConfere) {
+          return res.status(409).json({ erro: "Usuário já existe com outra senha. Use a aba 'Já tenho conta'." });
+        }
+
+        return res.status(200).json({
+          mensagem: "Conta já existente. Prosseguindo com login.",
+          usuario: usuarioExistente
+        });
+      }
+
+      // Permite converter conta criada via Google em conta local com senha.
+      if (!usuarioExistente.senha) {
+        usuarioExistente.nome = nome;
+        usuarioExistente.ra = ra;
+        usuarioExistente.curso = curso;
+        usuarioExistente.semestre = semestre;
+        usuarioExistente.email = emailNormalizado;
+        usuarioExistente.senha = senha;
+        if (!usuarioExistente.tipo) usuarioExistente.tipo = 'aluno';
+        await usuarioExistente.save();
+
+        const participanteAtualizado = await Participante.findOneAndUpdate(
+          { email: emailNormalizado },
+          { ra, nome, curso, semestre, email: emailNormalizado, usuarioId: usuarioExistente._id, ativo: true },
+          { upsert: true, new: true }
+        );
+
+        return res.status(200).json({
+          mensagem: "Conta atualizada com sucesso.",
+          usuario: usuarioExistente,
+          participante: participanteAtualizado
+        });
+      }
+
+      return res.status(409).json({ erro: "Usuário já existe." });
+    }
 
     const novoUsuario = new Usuario({ nome, ra, email: emailNormalizado, senha, curso, semestre });
     await novoUsuario.save();
@@ -52,19 +91,33 @@ router.post('/login-local', async (req, res) => {
       return res.status(401).json({ sucesso: false, erro: 'Senha inválida.' });
     }
 
-    req.login({ email: usuario.email, nome: usuario.nome }, (err) => {
+    req.login({ email: usuario.email, nome: usuario.nome }, async (err) => {
       if (err) {
         return res.status(500).json({ sucesso: false, erro: 'Falha ao iniciar sessão.' });
+      }
+
+      let redirect = '/dashboard-aluno.html';
+      const tipo = usuario.tipo || 'aluno';
+      if (tipo === 'admin') {
+        redirect = '/admin.html';
+      } else if (tipo === 'docente') {
+        redirect = '/dashboard-docente.html';
+      } else {
+        const participante = await Participante.findOne({ $or: [{ usuarioId: usuario._id }, { email: usuario.email }] });
+        if (!participante || !participante.ra) {
+          redirect = '/completar-perfil.html';
+        }
       }
 
       return res.json({
         sucesso: true,
         mensagem: 'Login realizado com sucesso.',
+        redirect,
         usuario: {
           _id: usuario._id,
           nome: usuario.nome,
           email: usuario.email,
-          tipo: usuario.tipo || 'aluno'
+          tipo
         }
       });
     });

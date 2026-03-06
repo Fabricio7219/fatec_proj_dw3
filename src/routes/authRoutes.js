@@ -70,6 +70,23 @@ async function processPostGoogleAuth(req, res) {
     }
 
     const email = req.user.email;
+
+    // Bootstrap local: em desenvolvimento, ao iniciar login pela tela admin
+    // (returnTo=/admin.html), permite promover o primeiro admin automaticamente.
+    // Em produção este fluxo fica desabilitado.
+    const returnTo = req.session && req.session.returnTo;
+    if (process.env.NODE_ENV !== 'production' && returnTo === '/admin.html') {
+      const existingAdmin = await Usuario.findOne({ tipo: 'admin' });
+      if (!existingAdmin || String(existingAdmin.email).toLowerCase() === email.toLowerCase()) {
+        await Usuario.findOneAndUpdate(
+          { email },
+          { nome: req.user.nome || req.user.displayName || email.split('@')[0], email, tipo: 'admin' },
+          { upsert: true, new: true }
+        );
+        try { delete req.session.returnTo; } catch(e) {}
+        return res.redirect('/admin.html');
+      }
+    }
     
     // Admin master (prioridade máxima) — ignora returnTo para garantir acesso ao painel
     const autoAdmins = process.env.ADMIN_AUTO_ADMINS ? process.env.ADMIN_AUTO_ADMINS.split(',').map(s => s.trim().toLowerCase()) : [];
