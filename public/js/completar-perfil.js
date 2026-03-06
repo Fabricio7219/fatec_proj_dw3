@@ -1,4 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
+  function getSafeReturnTo() {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('returnTo');
+    if (!raw) return null;
+    if (!raw.startsWith('/')) return null;
+    if (raw.startsWith('//')) return null;
+    if (raw.includes('http://') || raw.includes('https://')) return null;
+    return raw;
+  }
+
   // Helper para detectar ambiente e construir URL da API
   function buildApiUrl(path) {
       const host = window.location.hostname;
@@ -11,30 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const form = document.getElementById('formPerfil');
   const camposAluno = document.getElementById('camposAluno');
-  const tipoAluno = document.getElementById('tipoAluno');
-  const tipoDocente = document.getElementById('tipoDocente');
   const emailField = document.getElementById('email');
   const nomeField = document.getElementById('nome');
 
-  if (!form || !camposAluno || !tipoAluno || !tipoDocente || !emailField || !nomeField) {
+  if (!form || !camposAluno || !emailField || !nomeField) {
     console.error('Elementos necessários não foram encontrados em completar-perfil.');
     return;
   }
 
-  function updateCampos() {
-    const tipoSelecionado = document.querySelector('input[name="tipo"]:checked');
-    if (tipoSelecionado && tipoSelecionado.value === 'aluno') {
-      camposAluno.style.display = 'block';
-    } else {
-      camposAluno.style.display = 'none';
-    }
-  }
-
-  tipoAluno.addEventListener('change', updateCampos);
-  tipoDocente.addEventListener('change', updateCampos);
-
-  tipoAluno.checked = true;
-  updateCampos();
+  camposAluno.style.display = 'block';
 
   async function preencherDadosUsuario() {
     try {
@@ -57,19 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       emailField.value = user.email || localStorage.getItem('email') || '';
       nomeField.value = user.nome || user.displayName || localStorage.getItem('nome') || '';
-
-      if (user.tipo === 'docente') {
-        tipoDocente.checked = true;
-      } else {
-        tipoAluno.checked = true;
-      }
-      updateCampos();
     } catch (err) {
       console.error('Erro ao carregar dados do usuário:', err);
       emailField.value = localStorage.getItem('email') || '';
       nomeField.value = localStorage.getItem('nome') || '';
-      tipoAluno.checked = true;
-      updateCampos();
     }
   }
 
@@ -79,12 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
 
     const formData = new FormData(form);
-    const tipo = formData.get('tipo');
-
-    if (!tipo) {
-      alert('Escolha se você é Aluno ou Docente');
-      return;
-    }
+    const tipo = 'aluno';
 
     let emailVal = formData.get('email');
     let nomeVal = formData.get('nome');
@@ -134,7 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       alert(data.mensagem || 'Perfil salvo com sucesso');
-      window.location.href = tipo === 'docente' ? '/dashboard-docente.html' : '/dashboard-aluno.html';
+      const returnTo = getSafeReturnTo();
+      window.location.href = returnTo || '/dashboard-aluno.html';
     } catch (err) {
       console.error('Erro ao salvar perfil:', err);
       alert('Erro ao salvar perfil. Tente novamente.');

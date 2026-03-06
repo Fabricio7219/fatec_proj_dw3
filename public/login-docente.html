@@ -79,9 +79,15 @@
                     localStorage.setItem("email", user.email);
                     localStorage.setItem("nome", user.nome);
 
-                    // ✅ Se ainda não completou cadastro → vai para completar
-                    if (!user.tipo || user.tipo !== "docente" || !user.fatec || !user.cursos || user.cursos.length === 0) {
-                        return window.location.href = "completar-perfil.html";
+                    // Docente só acessa se já cadastrado como docente/admin no sistema
+                    if (user.tipo !== "docente" && user.tipo !== "admin") {
+                        document.getElementById('loginStatus').textContent = 'Seu acesso docente ainda não está liberado. Solicite cadastro ao administrador.';
+                        document.getElementById('loginStatus').className = 'status-message error';
+                        return;
+                    }
+
+                    if (user.tipo === 'admin') {
+                        return window.location.href = 'admin.html';
                     }
 
                     // ✅ Se cadastro completo, exibir informações
@@ -101,9 +107,9 @@
         }
 
         async function signOut() {
-            await fetch("http://localhost:3000/api/auth/logout", { method: "POST", credentials: "include" });
+            await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
             localStorage.clear();
-            window.location.reload();
+            window.location.href = 'index.html';
         }
 
         function continuarParaDashboard() {

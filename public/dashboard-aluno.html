@@ -346,7 +346,119 @@
         let palestrasNomes = {};
         let palestrasHorarios = {};
         let palestrasDatas = {};
+    let presencasPorPalestra = {};
     let usuarioAtual = null;
+
+        function isMesmoDia(dataA, dataB) {
+            if (!dataA || !dataB) return false;
+            return dataA.getFullYear() === dataB.getFullYear()
+                && dataA.getMonth() === dataB.getMonth()
+                && dataA.getDate() === dataB.getDate();
+        }
+
+        async function obterLocalizacaoOpcional() {
+            if (!navigator.geolocation) return null;
+            return new Promise((resolve) => {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    () => resolve(null),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            });
+        }
+
+        async function carregarStatusPresencas() {
+            presencasPorPalestra = {};
+            try {
+                const resp = await fetch('/api/presenca/minhas', { credentials: 'include' });
+                if (!resp.ok) return;
+                const json = await resp.json();
+                const lista = Array.isArray(json?.dados) ? json.dados : [];
+
+                lista.forEach((item) => {
+                    const pid = String(item?.palestraId || '');
+                    if (!pid) return;
+                    const atual = presencasPorPalestra[pid];
+                    const dataItem = item?.horarioEntrada ? new Date(item.horarioEntrada).getTime() : 0;
+                    const dataAtual = atual?.horarioEntrada ? new Date(atual.horarioEntrada).getTime() : 0;
+                    if (!atual || dataItem >= dataAtual) {
+                        presencasPorPalestra[pid] = item;
+                    }
+                });
+            } catch (err) {
+                console.warn('Não foi possível carregar status de presenças:', err);
+            }
+        }
+
+        async function registrarEntradaPainel(palestraId) {
+            try {
+                const localizacao = await obterLocalizacaoOpcional();
+                const resp = await fetch('/api/presenca/entrada', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ palestraId, modo: 'gps', localizacao })
+                });
+
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) {
+                    alert(data.erro || 'Não foi possível registrar entrada.');
+                    return;
+                }
+
+                alert('Entrada registrada com sucesso.');
+                await carregarInscricoes();
+                await carregarCertificados();
+            } catch (err) {
+                console.error('Erro ao registrar entrada pelo painel:', err);
+                alert('Erro de rede ao registrar entrada.');
+            }
+        }
+
+        async function registrarSaidaPainel(palestraId) {
+            try {
+                const status = presencasPorPalestra[String(palestraId)];
+                if (status && status.horarioEntrada) {
+                    const entradaMs = new Date(status.horarioEntrada).getTime();
+                    const duracaoMin = Math.max(1, Math.round((Number(horasPorPalestra[String(palestraId)] || 1) * 60)));
+                    const minSaida = Math.max(1, Math.ceil(duracaoMin * 0.2));
+                    const liberarEm = entradaMs + (minSaida * 60000);
+                    if (Date.now() < liberarEm) {
+                        const faltam = Math.max(1, Math.ceil((liberarEm - Date.now()) / 60000));
+                        alert(`Saída ainda não liberada. Aguarde aproximadamente ${faltam} minuto(s).`);
+                        return;
+                    }
+                }
+
+                const localizacao = await obterLocalizacaoOpcional();
+                const resp = await fetch('/api/presenca/saida', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ palestraId, modo: 'gps', localizacao })
+                });
+
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) {
+                    alert(data.erro || 'Não foi possível registrar saída.');
+                    return;
+                }
+
+                const d = data?.dados || {};
+                const restante = Number(d.tempo_restante_certificado_minutos || 0);
+                if (restante > 0) {
+                    alert(`Saída registrada. Aviso: faltaram ${restante} minuto(s), então você ainda não está elegível ao certificado desta palestra.`);
+                } else {
+                    alert('Saída registrada. Tempo mínimo atingido para elegibilidade ao certificado.');
+                }
+
+                await carregarInscricoes();
+                await carregarCertificados();
+            } catch (err) {
+                console.error('Erro ao registrar saída pelo painel:', err);
+                alert('Erro de rede ao registrar saída.');
+            }
+        }
 
         function formatDateTime(dateStr, duracaoMin) {
             try {
@@ -410,7 +522,7 @@
 
                     const botaoHtml = encerrada
                         ? `<button class="btn-inscrever inscrito" disabled>Encerrada</button>`
-                        : `<button class="btn-inscrever" onclick="abrirFormularioInscricao('${id}', this)">Inscrever-se</button>`;
+                        : `<button class="btn-inscrever" data-inscrever-id="${id}">Inscrever-se</button>`;
 
                     item.innerHTML = `
                         <div class="palestra-badge">🎤</div>
@@ -445,6 +557,13 @@
 
                     container.appendChild(item);
                 });
+
+                    container.querySelectorAll('.btn-inscrever[data-inscrever-id]').forEach((btn) => {
+                        btn.addEventListener('click', async () => {
+                            const pid = btn.dataset.inscreverId;
+                            await abrirFormularioInscricao(pid, btn);
+                        });
+                    });
                 };
 
                 renderGrupo(futuras, 'Palestras', false);
@@ -785,17 +904,75 @@
             container.style.display = 'block';
             
             lista.innerHTML = '';
+            const agora = new Date();
             palestrasInscritas.forEach(id => {
+                const pid = String(id);
+                const dataPalestra = palestrasDatas[pid] ? new Date(palestrasDatas[pid]) : null;
+                const statusPresenca = presencasPorPalestra[pid] || null;
+                const palestraHoje = dataPalestra ? isMesmoDia(dataPalestra, agora) : false;
+
+                let controlePresencaHtml = '<p class="muted">A presença será liberada no dia da palestra.</p>';
+
+                if (palestraHoje) {
+                    if (!statusPresenca || !statusPresenca.horarioEntrada) {
+                        controlePresencaHtml = `<button class="btn-inscrever" data-presenca-acao="entrada" data-pid="${pid}">Dar entrada</button>`;
+                    } else if (!statusPresenca.horarioSaida) {
+                        const entradaMs = new Date(statusPresenca.horarioEntrada).getTime();
+                        const duracaoMin = Math.max(1, Math.round((Number(horasPorPalestra[pid] || 1) * 60)));
+                        const minSaida = Math.max(1, Math.ceil(duracaoMin * 0.2));
+                        const liberarEm = entradaMs + (minSaida * 60000);
+                        const faltamSaida = Math.max(0, Math.ceil((liberarEm - Date.now()) / 60000));
+
+                        const minimoCert = Number(statusPresenca.minimoCertificadoMinutos || Math.ceil(duracaoMin * 0.6));
+                        const passados = Math.max(0, Math.ceil((Date.now() - entradaMs) / 60000));
+                        const faltamCert = Math.max(0, minimoCert - passados);
+                        const avisoCert = faltamCert > 0
+                            ? `Aviso: faltam ${faltamCert} minuto(s) para elegibilidade do certificado.`
+                            : 'Aviso: tempo mínimo para certificado já foi atingido.';
+
+                        if (faltamSaida > 0) {
+                            controlePresencaHtml = `
+                                <button class="btn-inscrever inscrito" disabled>Dar saída em ${faltamSaida} min</button>
+                                <p class="muted">${avisoCert}</p>
+                            `;
+                        } else {
+                            controlePresencaHtml = `
+                                <button class="btn-inscrever" data-presenca-acao="saida" data-pid="${pid}">Dar saída</button>
+                                <p class="muted">${avisoCert}</p>
+                            `;
+                        }
+                    } else {
+                        controlePresencaHtml = '<p class="muted">Participação finalizada para esta palestra.</p>';
+                    }
+                }
+
                 const div = document.createElement('div');
                 div.className = 'inscricao-item';
                 div.innerHTML = `
                     <div class="inscricao-info">
-                        <h4>${palestrasNomes[id] || 'Palestra'}</h4>
-                        <p>📅 ${palestrasHorarios[id] || 'Data/horário a confirmar'} - ⏱️ ${Number(horasPorPalestra[id] || 0).toFixed(1)}h</p>
+                        <h4>${palestrasNomes[pid] || 'Palestra'}</h4>
+                        <p>📅 ${palestrasHorarios[pid] || 'Data/horário a confirmar'} - ⏱️ ${Number(horasPorPalestra[pid] || 0).toFixed(1)}h</p>
+                        <div style="margin-top:8px">${controlePresencaHtml}</div>
                     </div>
-                    <button class="btn-cancelar" onclick="cancelarInscricao('${id}')">Cancelar</button>
+                    <button class="btn-cancelar" onclick="cancelarInscricao('${pid}')">Cancelar</button>
                 `;
                 lista.appendChild(div);
+            });
+
+            lista.querySelectorAll('[data-presenca-acao="entrada"]').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    btn.disabled = true;
+                    btn.textContent = 'Registrando...';
+                    await registrarEntradaPainel(btn.dataset.pid);
+                });
+            });
+
+            lista.querySelectorAll('[data-presenca-acao="saida"]').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    btn.disabled = true;
+                    btn.textContent = 'Registrando...';
+                    await registrarSaidaPainel(btn.dataset.pid);
+                });
             });
         }
 
@@ -831,9 +1008,8 @@
                 // Atualizar botão na lista de palestras — tenta encontrar pelo atributo onclick
                 const botoes = document.querySelectorAll('.btn-inscrever');
                 botoes.forEach(btn => {
-                    const onclick = btn.getAttribute('onclick') || '';
-                    const m = onclick.match(/abrirFormularioInscricao\(\s*['"]?([^'"\),]+)['"]?\s*,/);
-                    if (m && m[1] == id) {
+                    const pid = btn.dataset.inscreverId;
+                    if (pid && pid == id) {
                         btn.textContent = 'Inscrever-se';
                         btn.classList.remove('inscrito');
                     }
@@ -854,6 +1030,11 @@
         async function preencherHeaderUsuario() {
             try {
                 const data = await carregarUsuarioAtual();
+                if (data && data.cadastroCompleto === false) {
+                    const back = encodeURIComponent('/dashboard-aluno.html');
+                    window.location.href = `/completar-perfil.html?returnTo=${back}`;
+                    return;
+                }
                 const nome = data?.nome || data?.displayName || 'Usuário';
                 const ra = data?.ra || '---';
 
@@ -895,19 +1076,18 @@
                 // Atualiza botões
                 const botoes = document.querySelectorAll('.btn-inscrever');
                 botoes.forEach(btn => {
-                    const onclick = btn.getAttribute('onclick') || '';
-                    const m = onclick.match(/abrirFormularioInscricao\(\s*['"]?([^'"\),]+)['"]?\s*,/);
-                    if (m) {
-                        const pid = m[1];
-                        if (inscricoesMap[pid]) {
-                            btn.textContent = '✓ Inscrito';
-                            btn.classList.add('inscrito');
-                        } else {
-                            btn.textContent = 'Inscrever-se';
-                            btn.classList.remove('inscrito');
-                        }
+                    const pid = btn.dataset.inscreverId;
+                    if (!pid) return;
+                    if (inscricoesMap[pid]) {
+                        btn.textContent = '✓ Inscrito';
+                        btn.classList.add('inscrito');
+                    } else {
+                        btn.textContent = 'Inscrever-se';
+                        btn.classList.remove('inscrito');
                     }
                 });
+
+                await carregarStatusPresencas();
 
                 atualizarEstatisticas();
                 atualizarMinhasInscricoes();

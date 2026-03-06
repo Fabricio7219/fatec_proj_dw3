@@ -33,6 +33,17 @@ function calcularMinimoCertificado(palestra) {
     return Math.max(1, Math.ceil(duracao * percentual));
 }
 
+function formatarErroValidacao(verifica) {
+    const motivo = String(verifica && verifica.motivo ? verifica.motivo : 'Não autorizado');
+    const normalizado = motivo.toLowerCase();
+
+    if (normalizado.includes('fora do perímetro') || normalizado.includes('fora do perimetro') || normalizado.includes('fora do local')) {
+        return 'Ação bloqueada: sua localização está fora da área permitida do evento. Tentativas de registro fora do local são monitoradas para proteção da integridade do sistema e dos participantes.';
+    }
+
+    return `Validação falhou: ${motivo}`;
+}
+
 
 const ensureParticipante = require('../middleware/ensureParticipante');
 
@@ -131,7 +142,7 @@ router.post('/entrada', ensureParticipante, async (req, res) => {
         }
 
         if (!verifica || !verifica.ok) {
-            return res.status(403).json({ sucesso: false, erro: verifica && verifica.motivo ? `Validação falhou: ${verifica.motivo}` : 'Não autorizado' });
+            return res.status(403).json({ sucesso: false, erro: formatarErroValidacao(verifica) });
         }
 
         // Verifica se já existe presença registrada
@@ -216,7 +227,7 @@ router.post('/saida', ensureParticipante, async (req, res) => {
         }
 
         if (!verificaSaida || !verificaSaida.ok) {
-            return res.status(403).json({ sucesso: false, erro: verificaSaida && verificaSaida.motivo ? `Validação falhou: ${verificaSaida.motivo}` : 'Não autorizado' });
+            return res.status(403).json({ sucesso: false, erro: formatarErroValidacao(verificaSaida) });
         }
 
         // Busca o registro de presença ativo

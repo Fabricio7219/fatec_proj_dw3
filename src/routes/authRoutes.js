@@ -141,6 +141,7 @@ async function processPostGoogleAuth(req, res) {
     // returnTo: garantir salvamento mínimo antes de voltar (para alunos)
     const back = req.session && req.session.returnTo;
     if (back) {
+      const safeBack = sanitizeRedirect(back);
       try {
         const usuarioExist = await Usuario.findOne({ email });
         const docenteExist = await Docente.findOne({ email });
@@ -152,11 +153,21 @@ async function processPostGoogleAuth(req, res) {
           { nome, email, tipo },
           { upsert: true, new: true }
         );
+
+        // Se for aluno sem Participante vinculado, força completar perfil antes de voltar ao QR/rota original.
+        if (!docenteExist) {
+          const participanteExist = await Participante.findOne({ email });
+          if (!participanteExist || !participanteExist.ra) {
+            const retorno = encodeURIComponent(safeBack);
+            try { delete req.session.returnTo; } catch(e){}
+            return res.redirect(`/completar-perfil.html?returnTo=${retorno}`);
+          }
+        }
       } catch (e) {
         console.warn('⚠️ Salvamento mínimo antes do returnTo falhou:', e?.message);
       }
       try { delete req.session.returnTo; } catch(e){}
-      return res.redirect(back);
+      return res.redirect(safeBack);
     }
 
     // (demais fluxos) — manter como estava
@@ -382,19 +393,31 @@ router.post("/completar", async (req, res) => {
       }
     }
 
-    if (!email || !nome || !tipo) {
+    if (!email || !nome) {
       return res.status(400).json({ erro: 'Campos obrigatórios faltando (email, nome, tipo)' });
+    }
+
+    // Regra de segurança: completar perfil não pode promover usuário para docente/admin.
+    // Só mantém docente/admin se já existir previamente no banco.
+    const usuarioExistente = await Usuario.findOne({ email });
+    const docenteExistente = await Docente.findOne({ email });
+    let tipoFinal = 'aluno';
+
+    if (usuarioExistente && usuarioExistente.tipo === 'admin') {
+      tipoFinal = 'admin';
+    } else if (docenteExistente || (usuarioExistente && usuarioExistente.tipo === 'docente')) {
+      tipoFinal = 'docente';
     }
 
     // Salva/atualiza registro no model Usuario (upsert)
     const usuario = await Usuario.findOneAndUpdate(
       { email },
-      { nome, ra, curso, semestre, tipo },
+      { nome, ra, curso, semestre, tipo: tipoFinal },
       { upsert: true, new: true }
     );
 
     // Para alunos, garante entrada na coleção Participante e vincula ao Usuario
-    if (tipo === 'aluno') {
+    if (tipoFinal === 'aluno') {
       await Participante.findOneAndUpdate(
         { email },
         { nome, email, ra, curso, semestre, fatec, ativo: true, usuarioId: usuario._id },
@@ -403,7 +426,7 @@ router.post("/completar", async (req, res) => {
     }
 
     // Para docentes, garante entrada na coleção Docente e vincula ao Usuario
-    if (tipo === 'docente') {
+    if (tipoFinal === 'docente') {
       await Docente.findOneAndUpdate(
         { email },
         { nome, email, fatec: fatec || 'Não informado', cursos: curso ? [curso] : [], tipo: 'docente', usuarioId: usuario._id },

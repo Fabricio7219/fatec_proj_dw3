@@ -59,6 +59,17 @@
     return data;
   }
 
+  async function obterLocalizacaoOpcional() {
+    if (!navigator.geolocation) return null;
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+  }
+
   async function carregarPalestra(){
     try{
       const resp = await fetchJson('/api/palestras/' + encodeURIComponent(palestraId));
@@ -90,9 +101,10 @@
     statusEl.textContent = 'Registrando entrada...';
     resultEl.innerHTML = '';
     try{
+      const localizacao = await obterLocalizacaoOpcional();
       const resp = await fetchJson('/api/presenca/entrada', {
         method: 'POST',
-        body: JSON.stringify({ palestraId, modo: 'qr', qrData: window.location.href })
+        body: JSON.stringify({ palestraId, modo: 'qr', qrData: window.location.href, localizacao })
       });
       statusEl.textContent = '✅ Entrada registrada!';
       const d = resp && resp.dados ? resp.dados : resp;
@@ -117,9 +129,10 @@
     statusEl.textContent = 'Registrando saída...';
     resultEl.innerHTML = '';
     try{
+      const localizacao = await obterLocalizacaoOpcional();
       const resp = await fetchJson('/api/presenca/saida', {
         method: 'POST',
-        body: JSON.stringify({ palestraId, modo: 'qr', qrData: window.location.href })
+        body: JSON.stringify({ palestraId, modo: 'qr', qrData: window.location.href, localizacao })
       });
       statusEl.textContent = '✅ Saída registrada!';
       const dados = resp && resp.dados ? resp.dados : {};

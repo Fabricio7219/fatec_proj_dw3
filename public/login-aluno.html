@@ -109,6 +109,23 @@
     </footer>
 
     <script>
+        function getSafeReturnTo() {
+            const params = new URLSearchParams(window.location.search);
+            const raw = params.get('returnTo');
+            if (!raw) return null;
+            if (!raw.startsWith('/')) return null;
+            if (raw.startsWith('//')) return null;
+            if (raw.includes('http://') || raw.includes('https://')) return null;
+            return raw;
+        }
+
+        function applyReturnToOnGoogleButton() {
+            const btnGoogle = document.getElementById('btnGoogle');
+            const returnTo = getSafeReturnTo();
+            if (!btnGoogle || !returnTo) return;
+            btnGoogle.href = '/api/auth/google?returnTo=' + encodeURIComponent(returnTo);
+        }
+
         async function checkLogin() {
             try {
                 console.log("Verificando login...");
@@ -123,6 +140,7 @@
 
                 if (res.status === 200) {
                     const user = await res.json();
+                    const returnTo = getSafeReturnTo();
                     console.log("Dados do usuário:", user);
 
                     // 🔹 guarda dados para completar cadastro se necessário
@@ -131,6 +149,10 @@
 
                     // ✅ Verifica se cadastro está completo
                     if (user.cadastroCompleto) {
+                        if (returnTo) {
+                            console.log("Redirecionando para retorno do QR:", returnTo);
+                            return window.location.href = returnTo;
+                        }
                         if (user.tipo === "admin") {
                             console.log("Redirecionando para painel admin...");
                             return window.location.href = "admin.html";
@@ -144,7 +166,8 @@
                         }
                     } else {
                         console.log("Redirecionando para completar perfil...");
-                        return window.location.href = "completar-perfil.html";
+                        const next = returnTo ? ('completar-perfil.html?returnTo=' + encodeURIComponent(returnTo)) : 'completar-perfil.html';
+                        return window.location.href = next;
                     }
                 } else {
                     console.log("Usuário não autenticado");
@@ -321,6 +344,7 @@
         }
 
         window.onload = () => {
+            applyReturnToOnGoogleButton();
             bindAuthEvents();
             checkLogin();
         };
