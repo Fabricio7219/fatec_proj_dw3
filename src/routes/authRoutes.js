@@ -7,6 +7,18 @@ const EmailAdapter = require('../utils/EmailAdapter');
 const nodemailer = require('nodemailer');
 const router = express.Router();
 
+function getFixedAdminEmails() {
+  return String(process.env.ADMIN_FIXED_ADMINS || '')
+    .split(',')
+    .map((value) => String(value || '').trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function isFixedAdminEmail(email) {
+  if (!email) return false;
+  return getFixedAdminEmails().includes(String(email).trim().toLowerCase());
+}
+
 function sanitizeRedirect(target) {
   if (!target || typeof target !== 'string') return '/index.html';
   if (target.startsWith('http')) return '/index.html';
@@ -71,6 +83,15 @@ async function processPostGoogleAuth(req, res) {
 
     const email = req.user.email;
 
+    if (isFixedAdminEmail(email)) {
+      await Usuario.findOneAndUpdate(
+        { email },
+        { nome: req.user.nome || req.user.displayName || email.split('@')[0], email, tipo: 'admin' },
+        { upsert: true, new: true }
+      );
+      return res.redirect('/admin.html');
+    }
+
     // Bootstrap local: em desenvolvimento, ao iniciar login pela tela admin
     // (returnTo=/admin.html), permite promover o primeiro admin automaticamente.
     // Em produção este fluxo fica desabilitado.
@@ -99,9 +120,15 @@ async function processPostGoogleAuth(req, res) {
       return res.redirect('/admin.html');
     }
 
-    // Admin por domínio (opcional): se ADMIN_AUTO_DOMAIN estiver configurado e o email pertencer ao domínio
+    // Admin por domínio (opcional): aceita domínio (fatec.edu.br) ou e-mail completo.
     const autoDomain = (process.env.ADMIN_AUTO_DOMAIN || '').toLowerCase().trim();
-    if (autoDomain && email.toLowerCase().endsWith('@' + autoDomain)) {
+    const emailLower = String(email || '').toLowerCase();
+    const isEmailRule = autoDomain.includes('@');
+    const matchesAutoDomain = autoDomain && (
+      (isEmailRule && emailLower === autoDomain) ||
+      (!isEmailRule && emailLower.endsWith('@' + autoDomain))
+    );
+    if (matchesAutoDomain) {
       await Usuario.findOneAndUpdate(
         { email },
         { nome: req.user.nome || req.user.displayName || email.split('@')[0], email, tipo: 'admin' },
@@ -274,6 +301,19 @@ router.get('/me', async (req, res) => {
 
     const email = req.user.email;
     console.log('📧 Verificando email:', email);
+
+    if (isFixedAdminEmail(email)) {
+      const usuario = await Usuario.findOneAndUpdate(
+        { email },
+        {
+          nome: req.user.nome || req.user.displayName || email.split('@')[0],
+          email,
+          tipo: 'admin'
+        },
+        { upsert: true, new: true }
+      );
+      return res.json({ ...usuario.toObject(), tipo: 'admin', cadastroCompleto: true });
+    }
 
     try {
       // Verifica em Usuario (cadastros manuais/completos)

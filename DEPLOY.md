@@ -60,12 +60,26 @@ Defina no painel da plataforma (Render/Railway):
 - `MONGO_URI` — string do Mongo Atlas
 - `SESSION_SECRET` — valor secreto longo
 - `ADMIN_BOOTSTRAP_KEY` — chave para bootstrap de admin (opcional)
+- `ADMIN_FIXED_ADMINS` — email(s) do(s) admin(s) fixo(s) no backend (separados por vírgula)
 - `ADMIN_AUTO_ADMINS` — lista de emails que viram admin no primeiro login
 - `ADMIN_AUTO_DOMAIN` — (opcional) domínio inteiro vira admin, ex.: `fatec.edu.br`
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
 - `EMAIL_PROVIDER`, `SENDGRID_API_KEY` (ou SMTP_*)
 - `PRESENCA_TOL_BEFORE_MINUTES`, `PRESENCA_TOL_AFTER_MINUTES`, `CERT_THRESHOLD_MINUTES`
 - `NODE_ENV=production`
+
+Exemplo recomendado para Render (admins):
+
+```
+ADMIN_FIXED_ADMINS=faandrade1972@gmail.com
+ADMIN_AUTO_ADMINS=faandrade1972@gmail.com,theokuraio@gmail.com
+ADMIN_AUTO_DOMAIN=
+```
+
+Importante:
+- Se você quiser manter apenas um admin fixo e criar os demais pelo painel, deixe `ADMIN_AUTO_ADMINS` vazio.
+- Use apenas uma chave `ADMIN_AUTO_ADMINS`.
+- Se repetir a mesma variável em múltiplas linhas, o último valor sobrescreve os anteriores.
 
 ## 6. Deploy no Render
 

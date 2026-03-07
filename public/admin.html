@@ -302,13 +302,26 @@ function extractCoordsFromMapUrl(urlRaw){
 async function fetchJson(url, opts){
   try {
     const res = await fetch(url, { credentials: 'include', headers:{'Content-Type':'application/json'}, ...opts });
-    const data = await res.json();
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (_) {
+      data = null;
+    }
     if (!res.ok) throw data;
     return data;
   } catch(err){
     console.error(err);
     throw err;
   }
+}
+
+function extractErrMsg(err, fallback){
+  if (!err) return fallback;
+  if (typeof err === 'string') return err;
+  if (err.erro) return err.erro;
+  if (err.message) return err.message;
+  return fallback;
 }
 
 async function showEditForm(id){
@@ -488,7 +501,7 @@ async function loadAdmins(){
           await fetchJson(`${api.admins}/${btn.dataset.id}`, { method: 'DELETE' });
           await loadAdmins();
         } catch(err){
-          alert('Erro ao remover administrador');
+          alert(extractErrMsg(err, 'Erro ao remover administrador'));
         }
       });
     });
@@ -842,7 +855,7 @@ document.getElementById('adminForm').addEventListener('submit', async (event)=>{
     document.getElementById('adminForm').reset();
     await loadAdmins();
   } catch(err){
-    alert('Erro ao criar administrador');
+    alert(extractErrMsg(err, 'Erro ao criar administrador'));
   }
 });
 
